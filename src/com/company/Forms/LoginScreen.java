@@ -13,7 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Base64;
 
-public class LoginScreen extends javax.swing.JFrame {
+public class LoginScreen extends JFrame {
 
     private JTextField usernameField;
     private JPasswordField passwordField;
@@ -25,8 +25,6 @@ public class LoginScreen extends javax.swing.JFrame {
     private User loggedIn;
 
     public MysqlConnector connector = new MysqlConnector();
-
-    Boolean registerComplete = false;
 
     public User getLoggedIn() {
         return loggedIn;
@@ -109,13 +107,19 @@ public class LoginScreen extends javax.swing.JFrame {
             return false;
         }
 
-        if (hash.equals(connector.getPasswordHashByUsername(username))) {
+        String databaseHash = connector.getPasswordHashByUsername(username);
+        if (databaseHash.equals("nincs")) {
+            JOptionPane.showMessageDialog(null, "Nincs ilyen felhasználó!");
+            return false;
+        }
+
+        if (hash.equals(databaseHash)) {
             loggedIn = connector.getLoggedInUser(username);
             JOptionPane.showMessageDialog(this, "Sikeres bejelentkezés!");
             this.setVisible(false);
             return loggedIn != null;
         } else {
-            JOptionPane.showMessageDialog(this, "Ismeretlen hiba miatt a bejelentkezés nem sikerült!");
+            JOptionPane.showMessageDialog(this, "A jelszó nem egyezik!");
             return false;
         }
     }
@@ -124,17 +128,13 @@ public class LoginScreen extends javax.swing.JFrame {
         RegisterScreen register = new RegisterScreen(this);
         register.setVisible(true);
 
-        register.addWindowListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                registerComplete = register.getComplete();
-            }
-        });
-
-        return registerComplete;
+        return register.getComplete();
     }
 
     public Boolean resetProcess() {
-        return true;
+        PasswordReset pwReset = new PasswordReset(this);
+        pwReset.setVisible(true);
+
+        return pwReset.getComplete();
     }
 }

@@ -4,6 +4,7 @@
     <root id="archive" name="ReceptApp.jar">
       <element id="module-output" name="ReceptApp" />
       <element id="extracted-dir" path="$PROJECT_DIR$/APIs/mysql-connector-java-8.0.22.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/APIs/javax.mail.jar" path-in-jar="/" />
     </root>
   </artifact>
 </component>

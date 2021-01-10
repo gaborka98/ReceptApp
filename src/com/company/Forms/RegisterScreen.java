@@ -1,7 +1,6 @@
 package com.company.Forms;
 
 import com.company.MyClass.User;
-import com.company.MysqlConnector;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -10,7 +9,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.sql.PreparedStatement;
 
-public class RegisterScreen extends javax.swing.JFrame {
+public class RegisterScreen extends JFrame {
     private JPanel panel;
     private JButton registerButton;
     private JTextField usernameField;
@@ -75,9 +74,22 @@ public class RegisterScreen extends javax.swing.JFrame {
         String hash = parent.encryptStringSha256(passwordField.getPassword());
         String email = emailField.getText();
 
+
+
         if (username.isEmpty()) { JOptionPane.showMessageDialog(null, "Nem adtál meg felhasználónevet"); return false; }
         if (passwordField.getPassword().length == 0) { JOptionPane.showMessageDialog(null, "Nem adtál meg jelszót"); return false; }
         if (email.isEmpty()) { JOptionPane.showMessageDialog(null, "Nem adtál meg e-mail címet"); return false; }
+
+        if (!email.contains("@") || !email.contains(".")) { JOptionPane.showMessageDialog(null, "Adj meg valódi e-mail címet!"); return false; }
+
+        if (parent.connector.getLoggedInUser(username) != null) {
+            JOptionPane.showMessageDialog(null, "A felhasználónév már foglalt!");
+            return false;
+        }
+        if (parent.connector.getLoggedInUserByEmail(email) != null) {
+            JOptionPane.showMessageDialog(null, "Az E-mail cím már foglalt!");
+            return false;
+        }
 
         User user = new User(username, hash, email, false);
 

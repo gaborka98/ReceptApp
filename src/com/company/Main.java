@@ -30,10 +30,11 @@ public class Main {
             @Override
             public void componentHidden(ComponentEvent e) {
                 loggedIn = loginScreen.getLoggedIn();
-                if (loggedIn != null) {
+                /*if (loggedIn != null) {
                     MainMenu menu = new MainMenu(loggedIn);
                     menu.setvisible(true);
-                }
+                }*/
+                System.out.println("siker");
             }
         });
 
