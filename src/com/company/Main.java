@@ -2,6 +2,7 @@ package com.company;
 
 
 import com.company.Forms.LoginScreen;
+import com.company.Forms.MainMenu;
 import com.company.MyClass.User;
 
 import java.awt.event.ComponentAdapter;
@@ -30,11 +31,10 @@ public class Main {
             @Override
             public void componentHidden(ComponentEvent e) {
                 loggedIn = loginScreen.getLoggedIn();
-                /*if (loggedIn != null) {
+                if (loggedIn != null) {
                     MainMenu menu = new MainMenu(loggedIn);
-                    menu.setvisible(true);
-                }*/
-                System.out.println("siker");
+                    menu.setVisible(true);
+                }
             }
         });
 
