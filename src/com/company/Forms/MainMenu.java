@@ -4,6 +4,10 @@ import com.company.MyClass.User;
 import com.company.MysqlConnector;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.Connection;
 
 public class MainMenu extends JFrame{
@@ -18,7 +22,7 @@ public class MainMenu extends JFrame{
 
     public MainMenu(User ploggedIn) {
         this.loggedIn = ploggedIn;
-        conn = new MysqlConnector();
+        conn = MysqlConnector.getInstance();
 
         setLocationRelativeTo(null);
         setContentPane(panel);
@@ -33,10 +37,18 @@ public class MainMenu extends JFrame{
             moderatorButton.setEnabled(false);
             moderatorButton.setVisible(false);
         }
-        if (loggedIn.getStorageId() >= 0) {
-            raktarButton.setEnabled(true);
-        } else {
-            raktarButton.setEnabled(false);
-        }
+
+        logoutButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                logoutProcess();
+            }
+        });
+    }
+
+    private void logoutProcess() {
+        this.dispose();
+        LoginScreen login = new LoginScreen();
+        login.setVisible(true);
     }
 }

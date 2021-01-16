@@ -1,5 +1,7 @@
 package com.company.Forms;
 
+import com.company.MysqlConnector;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,12 +14,11 @@ public class PasswordReset extends JFrame {
     private JButton passwordResetButton;
     private JPasswordField passwrodField;
 
-    private LoginScreen parent;
+    private MysqlConnector connector = MysqlConnector.getInstance();
 
     private Boolean complete = false;
 
-    public PasswordReset(LoginScreen parent) {
-        this.parent = parent;
+    public PasswordReset() {
 
         setLocationRelativeTo(null);
         setContentPane(panel1);
@@ -59,17 +60,17 @@ public class PasswordReset extends JFrame {
         String email = emailTextfield.getText();
         char[] newPassword = passwrodField.getPassword();
 
-        String newHash = parent.encryptStringSha256(newPassword);
+        String newHash = connector.encryptStringSha256(newPassword);
 
-        if (email.isEmpty()) { JOptionPane.showMessageDialog(null, "Adj meg e-mail címet!"); return false; }
-        if (newPassword.length == 0) { JOptionPane.showMessageDialog(null, "Adj meg új jelszót!"); return false; }
-        if (!email.contains("@") || !email.contains(".")) { JOptionPane.showMessageDialog(null, "Valódi e-mail címet adj meg!"); return false; }
-        if (parent.connector.getLoggedInUserByEmail(email) == null) { JOptionPane.showMessageDialog(null, "A felhasználó nem található"); return false; }
+        if (email.isEmpty()) { JOptionPane.showMessageDialog(this, "Adj meg e-mail címet!"); return false; }
+        if (newPassword.length == 0) { JOptionPane.showMessageDialog(this, "Adj meg új jelszót!"); return false; }
+        if (!email.contains("@") || !email.contains(".")) { JOptionPane.showMessageDialog(this, "Valódi e-mail címet adj meg!"); return false; }
+        if (connector.getLoggedInUserByEmail(email) == null) { JOptionPane.showMessageDialog(this, "A felhasználó nem található"); return false; }
 
-        complete = parent.connector.changePasswordByEmail(email, newHash);
+        complete = connector.changePasswordByEmail(email, newHash);
 
         if (complete) {
-            JOptionPane.showMessageDialog(null, "Sikeresen megváltoztattad a jelszavad");
+            JOptionPane.showMessageDialog(this, "Sikeresen megváltoztattad a jelszavad");
             this.dispose();
         }
         return complete;

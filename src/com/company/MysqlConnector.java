@@ -2,13 +2,29 @@ package com.company;
 
 import com.company.MyClass.User;
 
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.*;
+import java.util.Arrays;
+import java.util.Base64;
 
 public class MysqlConnector {
+    private static MysqlConnector instance = null;
     private Connection conn ;
 
-    public MysqlConnector() {
+    public static MysqlConnector getInstance() {
+        if (instance == null){
+            instance = new MysqlConnector();
+        }
+        return instance;
+    }
+
+    private MysqlConnector() {
         try {
+            System.out.println("Kapcsolódás...");
             Class.forName("com.mysql.cj.jdbc.Driver");
             conn = DriverManager.getConnection("jdbc:mysql://192.168.1.56:3306/ReceptApp", "recept", "recept");
 
@@ -68,7 +84,7 @@ public class MysqlConnector {
             prep.setString(1, userToAdd.getUsername());
             prep.setString(2, userToAdd.getHash());
             prep.setString(3, userToAdd.getEmail());
-            prep.setBoolean(4, userToAdd.isModerator());
+            prep.setBoolean(4, userToAdd.getModerator());
 
             action = prep.executeUpdate();
 
@@ -81,6 +97,7 @@ public class MysqlConnector {
     }
 
     public Boolean changePasswordByEmail(String email, String hash) {
+        checkConnection();
         try {
             PreparedStatement prep = conn.prepareStatement("UPDATE users SET hash = ? WHERE email = ?");
             prep.setString(1, hash);
@@ -114,5 +131,21 @@ public class MysqlConnector {
         }
 
         return passwordHash;
+    }
+
+    public String encryptStringSha256(char[] text) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(charsToBytes(text));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private byte[] charsToBytes(char[] chars){
+        Charset charset = Charset.forName("UTF-8");
+        ByteBuffer byteBuffer = charset.encode(CharBuffer.wrap(chars));
+        return Arrays.copyOf(byteBuffer.array(), byteBuffer.limit());
     }
 }

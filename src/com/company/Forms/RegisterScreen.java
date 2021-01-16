@@ -1,6 +1,7 @@
 package com.company.Forms;
 
 import com.company.MyClass.User;
+import com.company.MysqlConnector;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
@@ -18,14 +19,13 @@ public class RegisterScreen extends JFrame {
 
     private Boolean complete;
 
-    private LoginScreen parent;
+    private MysqlConnector connector = MysqlConnector.getInstance();
 
     public Boolean getComplete() {
         return complete;
     }
 
-    public RegisterScreen(LoginScreen parent) {
-        this.parent = parent;
+    public RegisterScreen() {
         setLocationRelativeTo(null);
         setContentPane(panel);
         setTitle("ReceptApp Regisztráció");
@@ -71,32 +71,32 @@ public class RegisterScreen extends JFrame {
 
     private Boolean registerProcess() {
         String username = usernameField.getText();
-        String hash = parent.encryptStringSha256(passwordField.getPassword());
+        String hash = connector.encryptStringSha256(passwordField.getPassword());
         String email = emailField.getText();
 
 
 
-        if (username.isEmpty()) { JOptionPane.showMessageDialog(null, "Nem adtál meg felhasználónevet"); return false; }
-        if (passwordField.getPassword().length == 0) { JOptionPane.showMessageDialog(null, "Nem adtál meg jelszót"); return false; }
-        if (email.isEmpty()) { JOptionPane.showMessageDialog(null, "Nem adtál meg e-mail címet"); return false; }
+        if (username.isEmpty()) { JOptionPane.showMessageDialog(this, "Nem adtál meg felhasználónevet"); return false; }
+        if (passwordField.getPassword().length == 0) { JOptionPane.showMessageDialog(this, "Nem adtál meg jelszót"); return false; }
+        if (email.isEmpty()) { JOptionPane.showMessageDialog(this, "Nem adtál meg e-mail címet"); return false; }
 
-        if (!email.contains("@") || !email.contains(".")) { JOptionPane.showMessageDialog(null, "Adj meg valódi e-mail címet!"); return false; }
+        if (!email.contains("@") || !email.contains(".")) { JOptionPane.showMessageDialog(this, "Adj meg valódi e-mail címet!"); return false; }
 
-        if (parent.connector.getLoggedInUser(username) != null) {
-            JOptionPane.showMessageDialog(null, "A felhasználónév már foglalt!");
+        if (connector.getLoggedInUser(username) != null) {
+            JOptionPane.showMessageDialog(this, "A felhasználónév már foglalt!");
             return false;
         }
-        if (parent.connector.getLoggedInUserByEmail(email) != null) {
-            JOptionPane.showMessageDialog(null, "Az E-mail cím már foglalt!");
+        if (connector.getLoggedInUserByEmail(email) != null) {
+            JOptionPane.showMessageDialog(this, "Az E-mail cím már foglalt!");
             return false;
         }
 
         User user = new User(username, hash, email, false);
 
-        Boolean temp = parent.connector.addUserToDatabase(user);
+        Boolean temp = connector.addUserToDatabase(user);
 
         if (temp) {
-            JOptionPane.showMessageDialog(null, "Sikeres regisztráció, most már beléphetsz a fiókodba");
+            JOptionPane.showMessageDialog(this, "Sikeres regisztráció, most már beléphetsz a fiókodba");
             this.complete = true;
             this.dispose();
         }
