@@ -1,6 +1,7 @@
 package com.company;
 
 import com.company.MyClass.User;
+import com.mysql.cj.protocol.Resultset;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -8,12 +9,16 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 
 public class MysqlConnector {
     private static MysqlConnector instance = null;
     private Connection conn ;
+
+    private static final String host = "jdbc:mysql://192.168.1.56:3306/ReceptApp";
 
     public static MysqlConnector getInstance() {
         if (instance == null){
@@ -26,8 +31,8 @@ public class MysqlConnector {
         try {
             System.out.println("Kapcsolódás...");
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://192.168.1.56:3306/ReceptApp", "recept", "recept");
-
+            conn = DriverManager.getConnection(host, "recept", "recept");
+            System.out.println("Kapcsolat letrejott");
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
@@ -37,7 +42,7 @@ public class MysqlConnector {
         if (conn == null) {
             try {
                 Class.forName("com.mysql.jdbc.Driver");
-                conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/ReceptApp", "recept", "recept");
+                conn = DriverManager.getConnection(host, "recept", "recept");
             } catch (ClassNotFoundException | SQLException e) {
                 e.printStackTrace();
             }
@@ -131,6 +136,29 @@ public class MysqlConnector {
         }
 
         return passwordHash;
+    }
+
+    public void updatePlayer(User updatedPlayer) {
+        // TODO
+    }
+
+    public List<User> getAllModerator() {
+        checkConnection();
+        List<User> moderators = new ArrayList<>();
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM users WHERE moderator = ?");
+            prep.setBoolean(1, true);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                moderators.add(new User(rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator")));
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return moderators;
     }
 
     public String encryptStringSha256(char[] text) {

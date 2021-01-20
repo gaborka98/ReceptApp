@@ -17,6 +17,14 @@ public class User {
         this.storageId = -1;
     }
 
+    public User(String username, String hash, String email, Boolean isModerator, int storageId) {
+        this.username = username;
+        this.hash = hash;
+        this.email = email;
+        this.isModerator = isModerator;
+        this.storageId = storageId;
+    }
+
     public String getUsername() {
         return username;
     }

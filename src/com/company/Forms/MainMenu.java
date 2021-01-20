@@ -4,11 +4,9 @@ import com.company.MyClass.User;
 import com.company.MysqlConnector;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.sql.Connection;
 
 public class MainMenu extends JFrame{
     private JButton listButton;
@@ -23,10 +21,13 @@ public class MainMenu extends JFrame{
     public MainMenu(User ploggedIn) {
         this.loggedIn = ploggedIn;
         conn = MysqlConnector.getInstance();
+        Dimension size = new Dimension(300, 200);
 
         setLocationRelativeTo(null);
         setContentPane(panel);
         setTitle("ReceptApp Főmenü");
+        setMinimumSize(size);
+        setPreferredSize(size);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
 
@@ -44,6 +45,19 @@ public class MainMenu extends JFrame{
                 logoutProcess();
             }
         });
+
+        moderatorButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                moderatorProcess();
+            }
+        });
+    }
+
+    private void moderatorProcess() {
+        ModeratorEditor moderatorEditor = new ModeratorEditor(this);
+        moderatorEditor.setVisible(true);
+        this.setVisible(false);
     }
 
     private void logoutProcess() {
