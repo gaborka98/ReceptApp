@@ -74,8 +74,8 @@ public class ModeratorEditor extends JFrame {
         row = table1.getSelectedRow();
         col = 0;
         String username = table1.getValueAt(row, col).toString();
-
-        int result = JOptionPane.showConfirmDialog(this, "Biztos eltávolítod a moderátorok közül " + username + " nevű felhasználót?");
+        Object[] options = {"Igen", "Nem"};
+        int result = JOptionPane.showOptionDialog(this, "Biztos eltávolítod a moderátorok közül " + username + " nevű felhasználót?", "Moderátor eltávolítása", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
         if (result == JOptionPane.YES_OPTION) {
             if (conn.updatePlayerModeratorByUsername(username, false)) {
@@ -91,14 +91,18 @@ public class ModeratorEditor extends JFrame {
         String username = JOptionPane.showInputDialog(this, "Kérem a felhasználó nevét");
         if (!username.isEmpty()) {
             User updatedUser = conn.getLoggedInUser(username);
-            if (!updatedUser.getModerator()) {
-                if (conn.updatePlayerModeratorByUsername(username, true)) {
-                    updateList();
+            if (updatedUser != null) {
+                if (!updatedUser.getModerator()) {
+                    if (conn.updatePlayerModeratorByUsername(username, true)) {
+                        updateList();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Ismeretlen hiba lépett fel a művelet során");
+                    }
                 } else {
-                    JOptionPane.showMessageDialog(this, "Ismeretlen hiba lépett fel a művelet során");
+                    JOptionPane.showMessageDialog(this, "Ez a felhasználó már rendelkezik moderátori joggal!");
                 }
             } else {
-                JOptionPane.showMessageDialog(this, "Ez a felhasználó már rendelkezik moderátori joggal!");
+                JOptionPane.showMessageDialog(this, "A megadott felhasználó nem létezik!");
             }
         }
     }
