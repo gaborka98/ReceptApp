@@ -9,6 +9,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
 public class ModeratorEditor extends JFrame {
     private JPanel panel1;
@@ -43,13 +44,14 @@ public class ModeratorEditor extends JFrame {
         addModeratorButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                addModeratorProcess();
             }
         });
 
         deleteSelectedButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                deleteSelectedModerator();
             }
         });
 
@@ -67,12 +69,50 @@ public class ModeratorEditor extends JFrame {
         });
     }
 
+    private void deleteSelectedModerator() {
+        int col, row;
+        row = table1.getSelectedRow();
+        col = 0;
+        String username = table1.getValueAt(row, col).toString();
+
+        int result = JOptionPane.showConfirmDialog(this, "Biztos eltávolítod a moderátorok közül " + username + " nevű felhasználót?");
+
+        if (result == JOptionPane.YES_OPTION) {
+            if (conn.updatePlayerModeratorByUsername(username, false)) {
+                JOptionPane.showMessageDialog(this, "Sikeresen eltávolítottad a felhasználót a moderátorok közül.");
+                updateList();
+            } else {
+                JOptionPane.showMessageDialog(this, "Ismeretlen hiba lépett fel a művelet során!");
+            }
+        }
+    }
+
+    private void addModeratorProcess() {
+        String username = JOptionPane.showInputDialog(this, "Kérem a felhasználó nevét");
+        if (!username.isEmpty()) {
+            User updatedUser = conn.getLoggedInUser(username);
+            if (!updatedUser.getModerator()) {
+                if (conn.updatePlayerModeratorByUsername(username, true)) {
+                    updateList();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Ismeretlen hiba lépett fel a művelet során");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Ez a felhasználó már rendelkezik moderátori joggal!");
+            }
+        }
+    }
+
     private void updateList() {
         DefaultTableModel model = (DefaultTableModel) table1.getModel();
         model.setRowCount(0);
 
-        for (User iter : conn.getAllModerator()) {
-            model.addRow(new Object[]{iter.getUsername(), iter.getEmail()});
+        ArrayList<User> moderators = conn.getAllModerator();
+
+        if (!moderators.isEmpty()) {
+            for (User iter : conn.getAllModerator()) {
+                model.addRow(new Object[]{iter.getUsername(), iter.getEmail()});
+            }
         }
         table1.setModel(model);
     }

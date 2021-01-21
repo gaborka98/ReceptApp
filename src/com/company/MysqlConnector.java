@@ -138,13 +138,27 @@ public class MysqlConnector {
         return passwordHash;
     }
 
-    public void updatePlayer(User updatedPlayer) {
-        // TODO
+    public boolean updatePlayerModeratorByUsername(String username, Boolean state) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("UPDATE users SET moderator = ? WHERE username = ?");
+            prep.setBoolean(1,state);
+            prep.setString(2, username);
+
+            prep.executeUpdate();
+
+            prep.close();
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
-    public List<User> getAllModerator() {
+    public ArrayList<User> getAllModerator() {
         checkConnection();
-        List<User> moderators = new ArrayList<>();
+        ArrayList<User> moderators = new ArrayList<>();
         try {
             PreparedStatement prep = conn.prepareStatement("SELECT * FROM users WHERE moderator = ?");
             prep.setBoolean(1, true);
@@ -155,6 +169,7 @@ public class MysqlConnector {
                 moderators.add(new User(rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator")));
             }
 
+            prep.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
