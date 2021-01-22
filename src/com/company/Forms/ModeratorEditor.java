@@ -9,6 +9,8 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 
 public class ModeratorEditor extends JFrame {
@@ -35,11 +37,22 @@ public class ModeratorEditor extends JFrame {
         });
         updateList();
 
+        Dimension dim = new Dimension(500,250);
+
         setLocationRelativeTo(null);
         setContentPane(panel1);
+        setPreferredSize(dim);
+        setMinimumSize(dim);
         setTitle("Moderátorok szerkesztése");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
+
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                parent.setVisible(true);
+            }
+        });
 
         addModeratorButton.addActionListener(new ActionListener() {
             @Override
