@@ -26,8 +26,8 @@ public class MysqlConnector {
         try {
             System.out.println("Kapcsolódás...");
             Class.forName("com.mysql.cj.jdbc.Driver");
-            conn = DriverManager.getConnection("jdbc:mysql://192.168.1.56:3306/ReceptApp", "recept", "recept");
-
+            conn = DriverManager.getConnection("jdbc:mysql://gaborka98.mooo.com:3306/ReceptApp", "recept", "recept");
+            System.out.println("Kapcsolat sikeresen létrejött az adatbázissal");
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
