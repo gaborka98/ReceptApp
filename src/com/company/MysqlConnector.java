@@ -56,7 +56,7 @@ public class MysqlConnector {
             prep.setString(1, username);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
-                User loggedIn = new User(rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"));
+                User loggedIn = new User(rs.getInt("id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"));
                 return loggedIn;
             }
             prep.close();
@@ -72,7 +72,7 @@ public class MysqlConnector {
             prep.setString(1, email);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
-                return new User(rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"));
+                return new User(rs.getInt("id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
             }
             prep.close();
         } catch (SQLException e) {
@@ -83,22 +83,29 @@ public class MysqlConnector {
 
     public Boolean addUserToDatabase(User userToAdd) {
         checkConnection();
-        int action = -2;
         try {
-            PreparedStatement prep = conn.prepareStatement("INSERT INTO users (username, hash, email, moderator) VALUES (?,?,?,?)");
+            PreparedStatement prep = conn.prepareStatement("INSERT INTO users (username, hash, email, moderator) VALUES (?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
             prep.setString(1, userToAdd.getUsername());
             prep.setString(2, userToAdd.getHash());
             prep.setString(3, userToAdd.getEmail());
             prep.setBoolean(4, userToAdd.getModerator());
 
-            action = prep.executeUpdate();
+            prep.executeUpdate();
+            int generatedId = -1;
+            ResultSet rs = prep.getGeneratedKeys();
+            while (rs.next()){
+                generatedId = rs.getInt(1);
+            }
 
             prep.close();
+
+            userToAdd.setId(generatedId);
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
 
-        return action > 0;
+        return true;
     }
 
     public Boolean changePasswordByEmail(String email, String hash) {
@@ -111,11 +118,12 @@ public class MysqlConnector {
             prep.executeUpdate();
 
             prep.close();
-            return true;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
+
+        return true;
     }
 
     public String getPasswordHashByUsername(String username) {
@@ -138,7 +146,7 @@ public class MysqlConnector {
         return passwordHash;
     }
 
-    public boolean updatePlayerModeratorByUsername(String username, Boolean state) {
+    public Boolean updatePlayerModeratorByUsername(String username, Boolean state) {
         checkConnection();
         try {
             PreparedStatement prep = conn.prepareStatement("UPDATE users SET moderator = ? WHERE username = ?");
@@ -148,12 +156,11 @@ public class MysqlConnector {
             prep.executeUpdate();
 
             prep.close();
-
-            return true;
         } catch (SQLException e) {
             e.printStackTrace();
+            return false;
         }
-        return false;
+        return true;
     }
 
     public ArrayList<User> getAllModerator() {
@@ -166,7 +173,7 @@ public class MysqlConnector {
             ResultSet rs = prep.executeQuery();
 
             while (rs.next()) {
-                moderators.add(new User(rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator")));
+                moderators.add(new User(rs.getInt("id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator")));
             }
 
             prep.close();
@@ -174,6 +181,52 @@ public class MysqlConnector {
             e.printStackTrace();
         }
         return moderators;
+    }
+
+    public Boolean createStorageByUser(User user) {
+        checkConnection();
+        try {
+            Statement stmt = conn.createStatement();
+            int insertedId = 0;
+            stmt.executeUpdate("INSERT INTO storages VALUES()", Statement.RETURN_GENERATED_KEYS);
+
+            try(ResultSet rs = stmt.getGeneratedKeys()){
+                if (rs.next()) {
+                    insertedId = rs.getInt(1);
+                }
+                else throw new SQLException("Failed to get last inserted row's id");
+            }
+            stmt.close();
+            PreparedStatement prep = conn.prepareStatement("UPDATE users SET storage_id = ? WHERE id = ?");
+            prep.setInt(1, insertedId);
+            prep.setInt(2, user.getId());
+            prep.executeUpdate();
+
+            user.setStorageId(insertedId);
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    public Boolean deleteStorageByUser(User loggedIn) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("DELETE FROM storages WHERE id = ?");
+            prep.setInt(1, loggedIn.getStorageId());
+            prep.executeUpdate();
+            prep.close();
+
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate("UPDATE users SET storage_id = -1 WHERE id = " + loggedIn.getId());
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 
     public String encryptStringSha256(char[] text) {

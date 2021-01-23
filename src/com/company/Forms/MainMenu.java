@@ -20,6 +20,10 @@ public class MainMenu extends JFrame{
     private User loggedIn;
     private MysqlConnector conn;
 
+    public User getLoggedIn() {
+        return loggedIn;
+    }
+
     public MainMenu(User ploggedIn) {
         this.loggedIn = ploggedIn;
         conn = MysqlConnector.getInstance();
@@ -54,6 +58,18 @@ public class MainMenu extends JFrame{
                 moderatorProcess();
             }
         });
+        raktarButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                storageProcess();
+            }
+        });
+    }
+
+    private void storageProcess() {
+        StorageMenu storageMenu = new StorageMenu(this);
+        storageMenu.setVisible(true);
+        this.setVisible(false);
     }
 
     private void moderatorProcess() {
