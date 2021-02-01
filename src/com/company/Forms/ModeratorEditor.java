@@ -37,6 +37,13 @@ public class ModeratorEditor extends JFrame {
         });
         updateList();
 
+        this.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                parent.setVisible(true);
+            }
+        });
+
         Dimension dim = new Dimension(500,250);
 
         setLocationRelativeTo(null);

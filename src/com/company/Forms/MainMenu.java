@@ -64,6 +64,15 @@ public class MainMenu extends JFrame{
                 storageProcess();
             }
         });
+        listButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                RecipesList recipesList = new RecipesList(MainMenu.this);
+                recipesList.setVisible(true);
+                MainMenu.this.setVisible(false);
+
+            }
+        });
     }
 
     private void storageProcess() {

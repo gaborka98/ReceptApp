@@ -1,5 +1,6 @@
 package com.company;
 
+import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 import com.mysql.cj.protocol.Resultset;
 
@@ -9,10 +10,7 @@ import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 public class MysqlConnector {
     private static MysqlConnector instance = null;
@@ -56,7 +54,7 @@ public class MysqlConnector {
             prep.setString(1, username);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
-                User loggedIn = new User(rs.getInt("id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"));
+                User loggedIn = new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"));
                 return loggedIn;
             }
             prep.close();
@@ -72,7 +70,7 @@ public class MysqlConnector {
             prep.setString(1, email);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
-                return new User(rs.getInt("id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
+                return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
             }
             prep.close();
         } catch (SQLException e) {
@@ -173,7 +171,7 @@ public class MysqlConnector {
             ResultSet rs = prep.executeQuery();
 
             while (rs.next()) {
-                moderators.add(new User(rs.getInt("id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator")));
+                moderators.add(new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator")));
             }
 
             prep.close();
@@ -221,12 +219,37 @@ public class MysqlConnector {
 
             Statement stmt = conn.createStatement();
             stmt.executeUpdate("UPDATE users SET storage_id = -1 WHERE id = " + loggedIn.getId());
-            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
         return true;
+    }
+
+    public ArrayList<Recipe> getAllRecipe() {
+        checkConnection();
+        ArrayList<Recipe> toReturn = new ArrayList<>();
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id");
+            ResultSet rs = prep.executeQuery();
+            while(rs.next()) {
+                rs.getInt("allergies_id");
+                HashMap<String, Boolean> toAdd = new HashMap<>();
+                if (!rs.wasNull()) {
+                    toAdd.put("laktoz", rs.getBoolean("laktoz"));
+                    toAdd.put("gluten", rs.getBoolean("gluten"));
+                    toAdd.put("hus", rs.getBoolean("hus"));
+                    toAdd.put("tojas", rs.getBoolean("tojas"));
+                    toAdd.put("cukor", rs.getBoolean("cukor"));
+                }
+
+                toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), toAdd));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return toReturn;
     }
 
     public String encryptStringSha256(char[] text) {
