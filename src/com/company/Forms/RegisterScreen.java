@@ -26,11 +26,12 @@ public class RegisterScreen extends JFrame {
     }
 
     public RegisterScreen() {
-        setLocationRelativeTo(null);
+
         setContentPane(panel);
         setTitle("ReceptApp Regisztráció");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
+        setLocationRelativeTo(null);
 
         // Ha entert nyom a jelszo mezőben is belép
         usernameField.addKeyListener(new KeyAdapter() {

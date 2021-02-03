@@ -46,10 +46,10 @@ public class ModeratorEditor extends JFrame {
 
         Dimension dim = new Dimension(500,250);
 
-        setLocationRelativeTo(null);
         setContentPane(panel1);
         setPreferredSize(dim);
         setMinimumSize(dim);
+        setLocationRelativeTo(null);
         setTitle("Moderátorok szerkesztése");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();

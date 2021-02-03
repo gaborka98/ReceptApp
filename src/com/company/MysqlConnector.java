@@ -195,7 +195,7 @@ public class MysqlConnector {
                 else throw new SQLException("Failed to get last inserted row's id");
             }
             stmt.close();
-            PreparedStatement prep = conn.prepareStatement("UPDATE users SET storage_id = ? WHERE id = ?");
+            PreparedStatement prep = conn.prepareStatement("UPDATE users SET storage_id = ? WHERE user_id = ?");
             prep.setInt(1, insertedId);
             prep.setInt(2, user.getId());
             prep.executeUpdate();
@@ -212,13 +212,13 @@ public class MysqlConnector {
     public Boolean deleteStorageByUser(User loggedIn) {
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("DELETE FROM storages WHERE id = ?");
+            PreparedStatement prep = conn.prepareStatement("DELETE FROM storages WHERE storage_id = ?");
             prep.setInt(1, loggedIn.getStorageId());
             prep.executeUpdate();
             prep.close();
 
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate("UPDATE users SET storage_id = -1 WHERE id = " + loggedIn.getId());
+            stmt.executeUpdate("UPDATE users SET storage_id = -1 WHERE user_id = " + loggedIn.getId());
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
@@ -250,6 +250,48 @@ public class MysqlConnector {
         }
 
         return toReturn;
+    }
+
+    public HashMap<String, Boolean> getAllergiesByRecipeId(int recipeId) {
+        checkConnection();
+        HashMap<String, Boolean> toAdd = null;
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id WHERE recipe_id = ?");
+            prep.setInt(1, recipeId);
+            ResultSet rs = prep.executeQuery();
+            while (rs.next()) {
+                rs.getInt("allergie_id");
+                toAdd = new HashMap<>();
+                if (!rs.wasNull()) {
+                    toAdd.put("laktoz", rs.getBoolean("laktoz"));
+                    toAdd.put("gluten", rs.getBoolean("gluten"));
+                    toAdd.put("hus", rs.getBoolean("hus"));
+                    toAdd.put("tojas", rs.getBoolean("tojas"));
+                    toAdd.put("cukor", rs.getBoolean("cukor"));
+                }
+            }
+        } catch(SQLException e) {
+            e.printStackTrace();
+        }
+        return toAdd;
+    }
+
+    public Recipe getRecipeById(int id) {
+        checkConnection();
+        Recipe recipeToReturn = null;
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id WHERE recipe_id = ?");
+            prep.setInt(1, id);
+            ResultSet rs = prep.executeQuery();
+            while (rs.next()) {
+                HashMap<String, Boolean> tempAllergies = getAllergiesByRecipeId(id);
+                if (tempAllergies == null) {return null;}
+                recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), tempAllergies);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return recipeToReturn;
     }
 
     public String encryptStringSha256(char[] text) {

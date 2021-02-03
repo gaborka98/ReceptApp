@@ -28,10 +28,10 @@ public class StorageMenu extends JFrame {
 
         Dimension dim = new Dimension(300,200);
 
-        setLocationRelativeTo(null);
         setContentPane(panel1);
         setPreferredSize(dim);
         setMinimumSize(dim);
+        setLocationRelativeTo(null);
         setTitle("Raktár szerkesztése");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();

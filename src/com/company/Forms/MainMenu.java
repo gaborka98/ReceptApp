@@ -16,6 +16,7 @@ public class MainMenu extends JFrame{
     private JButton raktarButton;
     private JButton moderatorButton;
     private JButton logoutButton;
+    private JButton receptEditButton;
 
     private User loggedIn;
     private MysqlConnector conn;
@@ -27,22 +28,26 @@ public class MainMenu extends JFrame{
     public MainMenu(User ploggedIn) {
         this.loggedIn = ploggedIn;
         conn = MysqlConnector.getInstance();
-        Dimension size = new Dimension(300, 200);
+        Dimension size = new Dimension(300, 300);
 
-        setLocationRelativeTo(null);
         setContentPane(panel);
         setTitle("ReceptApp Főmenü");
         setMinimumSize(size);
         setPreferredSize(size);
+        setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
 
         if (loggedIn.getModerator()) {
             moderatorButton.setVisible(true);
             moderatorButton.setEnabled(true);
+            receptEditButton.setVisible(true);
+            receptEditButton.setEnabled(true);
         } else {
             moderatorButton.setEnabled(false);
             moderatorButton.setVisible(false);
+            receptEditButton.setEnabled(false);
+            receptEditButton.setVisible(false);
         }
 
         logoutButton.addActionListener(new ActionListener() {
@@ -67,10 +72,18 @@ public class MainMenu extends JFrame{
         listButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                RecipesList recipesList = new RecipesList(MainMenu.this);
+                RecipesList recipesList = new  RecipesList(MainMenu.this);
                 recipesList.setVisible(true);
                 MainMenu.this.setVisible(false);
 
+            }
+        });
+        receptEditButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                RecipesList recipesList = new RecipesList(MainMenu.this);
+                recipesList.setVisible(true);
+                MainMenu.this.setVisible(false);
             }
         });
     }

@@ -1,14 +1,16 @@
 package com.company.MyClass;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class Recipe {
-    int id;
-    String name;
-    String description;
-    String category;
-    int difficulty;
-    HashMap<String, Boolean> allergies;
+    private int id;
+    private String name;
+    private String description;
+    private String category;
+    private int difficulty;
+    private ArrayList<Ingredient> ingredients;
+    private HashMap<String, Boolean> allergies;
 
     public Recipe(int id, String name, String description, String category, int difficulty, HashMap<String, Boolean> allergies) {
         this.id = id;

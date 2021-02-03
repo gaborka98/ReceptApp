@@ -32,11 +32,12 @@ public class LoginScreen extends JFrame {
     }
 
     public LoginScreen() {
-        setLocationRelativeTo(null);
+
         setContentPane(panel);
         setTitle("ReceptApp Belépés");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         pack();
+        setLocationRelativeTo(null);
 
         // Ha entert nyom a jelszo mezőben is belép
         passwordField.addKeyListener(new KeyAdapter() {

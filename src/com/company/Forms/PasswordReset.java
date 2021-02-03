@@ -20,11 +20,12 @@ public class PasswordReset extends JFrame {
 
     public PasswordReset() {
 
-        setLocationRelativeTo(null);
+
         setContentPane(panel1);
         setTitle("ReceptApp Belépés");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
+        setLocationRelativeTo(null);
 
         passwordResetButton.addActionListener(new ActionListener() {
             @Override
