@@ -1,7 +1,6 @@
 package com.company.Forms;
 
 import com.company.MyClass.Recipe;
-import com.company.MyClass.User;
 import com.company.MysqlConnector;
 
 import javax.swing.*;
@@ -29,7 +28,7 @@ public class DetailView extends JFrame {
         this.recipe = recipe;
         this.parent = parent;
 
-        Dimension dim = new Dimension(600,1000);
+        Dimension dim = new Dimension(600,800);
 
         setContentPane(panel);
         setPreferredSize(dim);

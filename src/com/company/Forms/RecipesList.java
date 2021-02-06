@@ -1,5 +1,6 @@
 package com.company.Forms;
 
+import com.company.MyClass.Filter;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 import com.company.MysqlConnector;
@@ -10,6 +11,7 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.Collection;
 
 public class RecipesList extends JFrame {
     private JPanel panel1;
@@ -22,6 +24,7 @@ public class RecipesList extends JFrame {
     private JButton insertButton;
 
     private MainMenu parent;
+    private Filter filter;
 
     private MysqlConnector conn = MysqlConnector.getInstance();
 
@@ -44,7 +47,9 @@ public class RecipesList extends JFrame {
                 return false;
             }
         });
-        updateList();
+        TableColumnModel tcm = list.getColumnModel();
+        tcm.removeColumn(tcm.getColumn(0));
+        updateList(conn.getAllRecipe());
 
         Dimension dim = new Dimension(500,250);
 
@@ -81,30 +86,51 @@ public class RecipesList extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 RecipesList.this.dispose();
-                RecipesList.super.setVisible(true);
+                parent.setVisible(true);
             }
         });
         updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                updateList();
+                updateList(conn.getAllRecipe());
+            }
+        });
+        searchButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String search = JOptionPane.showInputDialog("Add meg a keresni kívánt név töredéket");
+                ArrayList<Recipe> recipes = conn.getRecipesBySearch(search);
+                updateList(recipes);
+            }
+        });
+        filterButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                FilterView filterView = new FilterView(RecipesList.this);
+                filterView.setVisible(true);
+                filterView.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        updateList(conn.getRecipesByFilter(filter));
+                    }
+                });
             }
         });
     }
 
-    private void updateList() {
+    private void updateList(ArrayList<Recipe> recipes) {
         DefaultTableModel model = (DefaultTableModel) list.getModel();
         model.setRowCount(0);
-        TableColumnModel tcm = list.getColumnModel();
-        tcm.removeColumn(tcm.getColumn(0));
 
-        ArrayList<Recipe> recipes = conn.getAllRecipe();
-
-        if (!recipes.isEmpty()) {
+        if (recipes != null && !recipes.isEmpty()) {
             for (Recipe iter : recipes) {
                 model.addRow(new Object[]{iter.getId(), iter.getName(), iter.getCategory(), iter.getDifficulty()});
             }
-        }
+        } else {model.addRow(new Object[] {"-1", "Nincs találat", "", ""});}
         list.setModel(model);
+    }
+
+    public void setFilter(Filter filter) {
+        this.filter = filter;
     }
 }

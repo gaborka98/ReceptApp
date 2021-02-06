@@ -1,5 +1,6 @@
 package com.company;
 
+import com.company.MyClass.Filter;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 import com.mysql.cj.protocol.Resultset;
@@ -191,8 +192,7 @@ public class MysqlConnector {
             try(ResultSet rs = stmt.getGeneratedKeys()){
                 if (rs.next()) {
                     insertedId = rs.getInt(1);
-                }
-                else throw new SQLException("Failed to get last inserted row's id");
+                } else throw new SQLException("Hiba az utoljára beszúrt sor lekérése közben");
             }
             stmt.close();
             PreparedStatement prep = conn.prepareStatement("UPDATE users SET storage_id = ? WHERE user_id = ?");
@@ -223,6 +223,7 @@ public class MysqlConnector {
             e.printStackTrace();
             return false;
         }
+        loggedIn.setStorageId(-1);
         return true;
     }
 
@@ -230,7 +231,7 @@ public class MysqlConnector {
         checkConnection();
         ArrayList<Recipe> toReturn = new ArrayList<>();
         try {
-            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id");
+            PreparedStatement prep = conn.prepareStatement("select * from list_all_recipes");
             ResultSet rs = prep.executeQuery();
             while(rs.next()) {
                 rs.getInt("allergies_id");
@@ -245,6 +246,7 @@ public class MysqlConnector {
 
                 toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), toAdd));
             }
+            prep.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -254,7 +256,7 @@ public class MysqlConnector {
 
     public HashMap<String, Boolean> getAllergiesByRecipeId(int recipeId) {
         checkConnection();
-        HashMap<String, Boolean> toAdd = null;
+        HashMap<String, Boolean> toAdd = new HashMap<>();
         try {
             PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id WHERE recipe_id = ?");
             prep.setInt(1, recipeId);
@@ -270,6 +272,7 @@ public class MysqlConnector {
                     toAdd.put("cukor", rs.getBoolean("cukor"));
                 }
             }
+            prep.close();
         } catch(SQLException e) {
             e.printStackTrace();
         }
@@ -285,7 +288,7 @@ public class MysqlConnector {
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
                 HashMap<String, Boolean> tempAllergies = getAllergiesByRecipeId(id);
-                if (tempAllergies == null) {return null;}
+                if (tempAllergies.isEmpty()) {tempAllergies = null;}
                 recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), tempAllergies);
             }
         } catch (SQLException e) {
@@ -308,5 +311,76 @@ public class MysqlConnector {
         Charset charset = Charset.forName("UTF-8");
         ByteBuffer byteBuffer = charset.encode(CharBuffer.wrap(chars));
         return Arrays.copyOf(byteBuffer.array(), byteBuffer.limit());
+    }
+
+    public ArrayList<Recipe> getRecipesBySearch(String search) {
+        checkConnection();
+        ArrayList<Recipe> recipes = new ArrayList<>();
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes WHERE name like ?");
+            prep.setString(1, '%' + search + '%');
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
+                if (allergies.isEmpty()) { allergies = null; }
+                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies));
+            }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if(recipes.isEmpty()) { return null; }
+        return recipes;
+    }
+
+    public ArrayList<Recipe> getRecipesByFilter(Filter filter) {
+        checkConnection();
+        ArrayList<Recipe> recipes = new ArrayList<>();
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append(filter.getCategory() == null ? "" : " AND categories_id = " + filter.getCategory());
+            sb.append(filter.getDifficulty() == 0 ? "" : " AND difficulty <= " + filter.getDifficulty());
+
+            sb.append((filter.getHus() ? " AND hus = 0" : ""));
+            sb.append((filter.getLaktoz() ? " AND laktoz = 0" : ""));
+            sb.append((filter.getCukor() ? " AND cukor = 0" : ""));
+            sb.append((filter.getTojas() ? " AND tojas = 0" : ""));
+            sb.append((filter.getGluten() ? " AND gluten = 0" : ""));
+
+            sb.delete(0,5);
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM list_all_recipes where " + sb.toString());
+
+            ResultSet rs = prep.executeQuery();
+            while (rs.next()) {
+                HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
+                if (allergies.isEmpty()) { allergies = null; }
+                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies));
+            }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if(recipes.isEmpty()) { return null; }
+        return recipes;
+    }
+
+    public ArrayList<String> getAllCategory() {
+        ArrayList<String> categories = new ArrayList<>();
+        try {
+            Statement stmt = conn.createStatement();
+
+            ResultSet rs = stmt.executeQuery("SELECT name FROM categories");
+
+            while (rs.next()) {
+                categories.add(rs.getString("name"));
+            }
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (categories.isEmpty()) { return null; }
+        return categories;
     }
 }
