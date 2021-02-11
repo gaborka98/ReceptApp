@@ -22,6 +22,7 @@ public class RecipesList extends JFrame {
     private JButton updateButton;
     private JButton editButton;
     private JButton insertButton;
+    private JButton kedvencekhezAdásEltávolításButton;
 
     private MainMenu parent;
     private Filter filter;
@@ -51,7 +52,7 @@ public class RecipesList extends JFrame {
         tcm.removeColumn(tcm.getColumn(0));
         updateList(conn.getAllRecipe());
 
-        Dimension dim = new Dimension(500,250);
+        Dimension dim = new Dimension(600,350);
 
         setContentPane(panel1);
         setPreferredSize(dim);
@@ -111,7 +112,7 @@ public class RecipesList extends JFrame {
                 filterView.addWindowListener(new WindowAdapter() {
                     @Override
                     public void windowClosed(WindowEvent e) {
-                        updateList(conn.getRecipesByFilter(filter));
+                        updateList(conn.getRecipesByFilter(filter, getLoggedIn()));
                     }
                 });
             }

@@ -8,6 +8,7 @@ public class Filter {
     private Boolean laktoz;
     private Boolean hus;
     private Boolean cukor;
+    private Boolean favorites;
 
     public Filter() {
         this.category = null;
@@ -17,6 +18,15 @@ public class Filter {
         this.laktoz = null;
         this.hus = null;
         this.cukor = null;
+        this.favorites = null;
+    }
+
+    public Boolean getFavorites() {
+        return favorites;
+    }
+
+    public void setFavorites(Boolean favorites) {
+        this.favorites = favorites;
     }
 
     public Integer getCategory() {

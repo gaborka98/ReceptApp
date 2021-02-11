@@ -4,6 +4,7 @@ import com.company.MyClass.Filter;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 import com.mysql.cj.protocol.Resultset;
+import com.mysql.cj.x.protobuf.MysqlxPrepare;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -258,11 +259,11 @@ public class MysqlConnector {
         checkConnection();
         HashMap<String, Boolean> toAdd = new HashMap<>();
         try {
-            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id WHERE recipe_id = ?");
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM list_all_recipes WHERE recipe_id = ?");
             prep.setInt(1, recipeId);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
-                rs.getInt("allergie_id");
+                rs.getInt("allergies_id");
                 toAdd = new HashMap<>();
                 if (!rs.wasNull()) {
                     toAdd.put("laktoz", rs.getBoolean("laktoz"));
@@ -283,7 +284,7 @@ public class MysqlConnector {
         checkConnection();
         Recipe recipeToReturn = null;
         try {
-            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes LEFT JOIN allergies ON allergies_id = allergies.allergie_id WHERE recipe_id = ?");
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM list_all_recipes WHERE recipe_id = ?");
             prep.setInt(1, id);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
@@ -317,7 +318,7 @@ public class MysqlConnector {
         checkConnection();
         ArrayList<Recipe> recipes = new ArrayList<>();
         try {
-            PreparedStatement prep = conn.prepareStatement("SELECT * FROM recipes WHERE name like ?");
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM list_all_recipes WHERE name like ?");
             prep.setString(1, '%' + search + '%');
 
             ResultSet rs = prep.executeQuery();
@@ -335,9 +336,10 @@ public class MysqlConnector {
         return recipes;
     }
 
-    public ArrayList<Recipe> getRecipesByFilter(Filter filter) {
+    public ArrayList<Recipe> getRecipesByFilter(Filter filter, User user) {
         checkConnection();
         ArrayList<Recipe> recipes = new ArrayList<>();
+        if (filter == null) { return getAllRecipe(); }
         try {
             StringBuilder sb = new StringBuilder();
             sb.append(filter.getCategory() == null ? "" : " AND categories_id = " + filter.getCategory());
@@ -349,9 +351,14 @@ public class MysqlConnector {
             sb.append((filter.getTojas() ? " AND tojas = 0" : ""));
             sb.append((filter.getGluten() ? " AND gluten = 0" : ""));
 
-            sb.delete(0,5);
-            PreparedStatement prep = conn.prepareStatement("SELECT * FROM list_all_recipes where " + sb.toString());
-
+            PreparedStatement prep;
+            if(filter.getFavorites()) {
+                prep = conn.prepareStatement("select r.* from list_all_recipes r INNER JOIN favorites f ON f.recipe_id = r.recipe_id INNER JOIN users u ON u.user_id = f.user_id WHERE f.user_id = ? " + sb.toString());
+                prep.setInt(1, user.getId());
+            } else {
+                sb.delete(0,5);
+                prep = conn.prepareStatement("SELECT * FROM list_all_recipes " + (sb.length() == 0 ? "" : "WHERE") + sb.toString());
+            }
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));

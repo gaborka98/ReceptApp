@@ -21,6 +21,7 @@ public class FilterView extends JFrame {
     private JCheckBox glutenCheckBox;
     private JSlider diffSlider;
     private JLabel sliderValue;
+    private JCheckBox favoriteCheckbox;
 
     private MysqlConnector conn = MysqlConnector.getInstance();
     private RecipesList parent;
@@ -63,6 +64,7 @@ public class FilterView extends JFrame {
         filter.setHus(this.husCheckBox.isSelected());
         filter.setLaktoz(this.laktozCheckBox.isSelected());
         filter.setTojas(this.tojasCheckBox.isSelected());
+        filter.setFavorites(this.favoriteCheckbox.isSelected());
 
         parent.setFilter(filter);
 

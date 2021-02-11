@@ -17,6 +17,7 @@ public class MainMenu extends JFrame{
     private JButton moderatorButton;
     private JButton logoutButton;
     private JButton receptEditButton;
+    private JButton statisticButton;
 
     private User loggedIn;
     private MysqlConnector conn;
