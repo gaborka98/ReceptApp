@@ -13,6 +13,11 @@ import java.awt.event.WindowEvent;
 public class StorageMenu extends JFrame {
     private static final MysqlConnector conn = MysqlConnector.getInstance();
     private MainMenu parent;
+
+    public User getLoggedIn() {
+        return loggedIn;
+    }
+
     private User loggedIn;
 
     private JButton createButton;
@@ -81,6 +86,14 @@ public class StorageMenu extends JFrame {
                         JOptionPane.showMessageDialog(StorageMenu.this, "Folyamat során ismeretlen hiba lépett fel!");
                     }
                 }
+            }
+        });
+        editButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                StorageEdit se = new StorageEdit(StorageMenu.this);
+                se.setVisible(true);
+                StorageMenu.this.setVisible(false);
             }
         });
     }

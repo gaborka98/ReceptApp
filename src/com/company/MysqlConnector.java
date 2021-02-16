@@ -1,12 +1,14 @@
 package com.company;
 
 import com.company.MyClass.Filter;
+import com.company.MyClass.Ingredient;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 import com.mysql.cj.QueryResult;
 import com.mysql.cj.protocol.Resultset;
 import com.mysql.cj.x.protobuf.MysqlxPrepare;
 
+import javax.xml.transform.Result;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -57,7 +59,7 @@ public class MysqlConnector {
             prep.setString(1, username);
             ResultSet rs = prep.executeQuery();
             while (rs.next()) {
-                User loggedIn = new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"));
+                User loggedIn = new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
                 return loggedIn;
             }
             prep.close();
@@ -221,12 +223,28 @@ public class MysqlConnector {
 
             Statement stmt = conn.createStatement();
             stmt.executeUpdate("UPDATE users SET storage_id = -1 WHERE user_id = " + loggedIn.getId());
+
+            deleteAllIngredientsByStorageId(loggedIn.getStorageId());
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
         loggedIn.setStorageId(-1);
         return true;
+    }
+
+    private void deleteAllIngredientsByStorageId(int storageId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("delete from ingredients where storage_id = ?");
+            prep.setInt(1, storageId);
+
+            prep.executeUpdate();
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public ArrayList<Recipe> getAllRecipe() {
@@ -459,5 +477,164 @@ public class MysqlConnector {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public ArrayList<Ingredient> getAllStorageIngredientByStorageId(int id) {
+        ArrayList<Ingredient> toReturn = new ArrayList<>();
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select i.ingredient_id as ingredient_id, i.name as name, i.measure as measure, pi.`group` as 'group' from ingredients i inner join pre_ingrediets pi on i.name=pi.name  where storage_id = ?");
+            prep.setInt(1, id);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), rs.getInt("group"), getDefaultUnitByGroup(rs.getInt("group"))));
+            }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return toReturn;
+    }
+
+    public int getMultipliByUnit(String unit) {
+        String result = "";
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select multipli from ing_groups where measure = ?");
+            prep.setString(1, unit);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                result = rs.getString("multipli");
+            }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Integer.parseInt(result);
+    }
+
+    public String getDefaultUnitByGroup(int group) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select measure from ing_groups where `group` = ? AND multipli = 1");
+            prep.setInt(1, group);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                return rs.getString("measure");
+            }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return "";
+    }
+
+    public void deleteIngredientsById(int id) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("delete from ingredients where ingredient_id = ?");
+            prep.setInt(1, id);
+
+            prep.executeUpdate();
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ArrayList<String> getAllUnitByIngredientName(String ingredietName) {
+        ArrayList<String> toReturn = new ArrayList<>();
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select measure from ing_groups ig where `group` = (select `group` from pre_ingrediets pi left join ingredients i on pi.name = i.name where pi.name = ?)");
+            prep.setString(1, ingredietName);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                toReturn.add(rs.getString("measure"));
+            }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return toReturn;
+    }
+
+    public ArrayList<String> getAllIngredients() {
+        ArrayList<String> toReturn = new ArrayList<>();
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select name from pre_ingrediets");
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                toReturn.add(rs.getString("name"));
+            }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return toReturn;
+    }
+
+    public void addIngredientToStorage(int storageId, Ingredient add) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("insert into ingredients(ingredient_id, name, measure, storage_id) VALUES (?, ?, ?, ?) on duplicate key update measure = measure + ?;");
+            int id = getIngredientIdByNameAndStorageId(add.getName(), storageId);
+
+            if (id == -1) {
+                Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery("SELECT `auto_increment` FROM INFORMATION_SCHEMA.TABLES WHERE table_name = 'ingredients'");
+                if (rs.next()) {
+                    prep.setInt(1, rs.getInt("auto_increment"));
+                }
+            }
+            else prep.setInt(1, id);
+
+            prep.setString(2, add.getName());
+            prep.setDouble(3, add.getMeasure());
+            prep.setInt(4, storageId);
+            prep.setDouble(5, add.getMeasure());
+
+            prep.executeUpdate();
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int getIngredientIdByNameAndStorageId(String name, int storageId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select ingredient_id from ingredients where name = ? AND storage_id = ?");
+            prep.setString(1,name);
+            prep.setInt(2, storageId);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) { return rs.getInt("ingredient_id"); }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
     }
 }

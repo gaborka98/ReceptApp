@@ -16,7 +16,6 @@ public class MainMenu extends JFrame{
     private JButton raktarButton;
     private JButton moderatorButton;
     private JButton logoutButton;
-    private JButton receptEditButton;
     private JButton statisticButton;
 
     private User loggedIn;
@@ -42,13 +41,9 @@ public class MainMenu extends JFrame{
         if (loggedIn.getModerator()) {
             moderatorButton.setVisible(true);
             moderatorButton.setEnabled(true);
-            receptEditButton.setVisible(true);
-            receptEditButton.setEnabled(true);
         } else {
             moderatorButton.setEnabled(false);
             moderatorButton.setVisible(false);
-            receptEditButton.setEnabled(false);
-            receptEditButton.setVisible(false);
         }
 
         logoutButton.addActionListener(new ActionListener() {
@@ -77,14 +72,6 @@ public class MainMenu extends JFrame{
                 recipesList.setVisible(true);
                 MainMenu.this.setVisible(false);
 
-            }
-        });
-        receptEditButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                RecipesList recipesList = new RecipesList(MainMenu.this);
-                recipesList.setVisible(true);
-                MainMenu.this.setVisible(false);
             }
         });
     }
