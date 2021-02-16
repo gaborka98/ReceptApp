@@ -24,12 +24,12 @@ public class RecipesList extends JFrame {
     private JButton insertButton;
     private JButton kedvencekhezAdásEltávolításButton;
 
-    private MainMenu parent;
+    private final MainMenu parent;
     private Filter filter;
 
     private MysqlConnector conn = MysqlConnector.getInstance();
 
-    private String[] columns = {"id", "Név", "Kategória", "Nehézség"};
+    private String[] columns = {"id", "Név", "Kategória", "Nehézség", "kedvenc"};
 
     public User getLoggedIn() { return parent.getLoggedIn(); }
 
@@ -117,6 +117,26 @@ public class RecipesList extends JFrame {
                 });
             }
         });
+        kedvencekhezAdásEltávolításButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int col, row;
+                row = list.getSelectedRow();
+                col = 4;
+
+                if (row == -1) return;
+
+                String selectedRecipe = list.getModel().getValueAt(row, col).toString();
+                String selectedRecipeId = list.getModel().getValueAt(row, 0).toString();
+
+                if ("*".equals(selectedRecipe)) {
+                    conn.removeFavorite(getLoggedIn(), selectedRecipeId);
+                } else {
+                    conn.addFavorite(getLoggedIn(), selectedRecipeId);
+                }
+                updateList(conn.getAllRecipe());
+            }
+        });
     }
 
     private void updateList(ArrayList<Recipe> recipes) {
@@ -125,9 +145,10 @@ public class RecipesList extends JFrame {
 
         if (recipes != null && !recipes.isEmpty()) {
             for (Recipe iter : recipes) {
-                model.addRow(new Object[]{iter.getId(), iter.getName(), iter.getCategory(), iter.getDifficulty()});
+
+                model.addRow(new Object[]{iter.getId(), iter.getName(), iter.getCategory(), iter.getDifficulty(), (conn.favoriteExist(getLoggedIn(), iter) ? "*" : "") });
             }
-        } else {model.addRow(new Object[] {"-1", "Nincs találat", "", ""});}
+        } else {model.addRow(new Object[] {"-1", "Nincs találat", "", "", ""});}
         list.setModel(model);
     }
 

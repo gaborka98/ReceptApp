@@ -3,6 +3,7 @@ package com.company;
 import com.company.MyClass.Filter;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
+import com.mysql.cj.QueryResult;
 import com.mysql.cj.protocol.Resultset;
 import com.mysql.cj.x.protobuf.MysqlxPrepare;
 
@@ -389,5 +390,74 @@ public class MysqlConnector {
         }
         if (categories.isEmpty()) { return null; }
         return categories;
+    }
+
+    public void removeFavorite(User loggedIn, String selectedRecipeId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("DELETE FROM favorites WHERE user_id = ? AND recipe_id = ?");
+            prep.setInt(1, loggedIn.getId());
+            prep.setInt(2, Integer.parseInt(selectedRecipeId));
+
+            if (favoriteExist(loggedIn, selectedRecipeId)) {
+                prep.executeUpdate();
+            }
+
+            prep.close();
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void addFavorite(User loggedIn, String selectedRecipeId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("INSERT INTO favorites (user_id, recipe_id) VALUES (?,?)");
+            prep.setInt(1, loggedIn.getId());
+            prep.setInt(2, Integer.parseInt(selectedRecipeId));
+
+            if (!favoriteExist(loggedIn, selectedRecipeId)) {
+                prep.executeUpdate();
+            }
+
+            prep.close();
+        } catch (SQLException | NumberFormatException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean favoriteExist(User loggedIn, String selectedRecipeId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM favorites WHERE user_id = ? AND recipe_id = ?");
+            prep.setInt(1, loggedIn.getId());
+            prep.setInt(2, Integer.parseInt(selectedRecipeId));
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { return true; }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    public boolean favoriteExist(User loggedIn, Recipe recipe) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("SELECT * FROM favorites WHERE user_id = ? AND recipe_id = ?");
+            prep.setInt(1, loggedIn.getId());
+            prep.setInt(2, recipe.getId());
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { return true; }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 }

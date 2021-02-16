@@ -93,6 +93,9 @@ public class ModeratorEditor extends JFrame {
         int col, row;
         row = table1.getSelectedRow();
         col = 0;
+
+        if (row == -1) return;
+
         String username = table1.getValueAt(row, col).toString();
         Object[] options = {"Igen", "Nem"};
         int result = JOptionPane.showOptionDialog(this, "Biztos eltávolítod a moderátorok közül " + username + " nevű felhasználót?", "Moderátor eltávolítása", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
