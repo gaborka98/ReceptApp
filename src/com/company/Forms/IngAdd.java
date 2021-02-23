@@ -70,7 +70,7 @@ public class IngAdd extends JFrame{
             } catch (NumberFormatException e) {
                 JOptionPane.showMessageDialog(this, "A szam formátumát rosszul adtad meg! példa: 1, 1.2, 1.25, 2.234");
             }
-            return new Ingredient(comboBox1.getSelectedItem().toString(), measure * conn.getMultipliByUnit(comboBox2.getSelectedItem().toString()), comboBox2.getSelectedItem().toString());
+            return new Ingredient(comboBox1.getSelectedItem().toString(), measure * conn.getMultipliByUnit(comboBox2.getSelectedItem().toString()), comboBox2.getSelectedItem().toString(), conn.getIngredientGroupByName(comboBox1.getSelectedItem().toString()));
         }
     }
 }

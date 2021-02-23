@@ -1,14 +1,29 @@
 package com.company.MyClass;
 
+import com.company.MysqlConnector;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class User {
+    private static final MysqlConnector conn = MysqlConnector.getInstance();
+
     private int id;
     private String username;
     private String hash;
     private String email;
     private Boolean isModerator;
     private int storageId;
+
+    public ArrayList<Ingredient> getStorage() {
+        return storage;
+    }
+
+    public void setStorage(ArrayList<Ingredient> storage) {
+        this.storage = storage;
+    }
+
+    private ArrayList<Ingredient> storage;
 
     public int getId() {
         return id;
@@ -43,6 +58,7 @@ public class User {
         this.email = email;
         this.isModerator = isModerator;
         this.storageId = storageId;
+        this.storage = conn.getAllStorageIngredientByStorageId(getStorageId());
     }
 
     public String getUsername() {

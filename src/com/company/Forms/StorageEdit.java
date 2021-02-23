@@ -101,6 +101,7 @@ public class StorageEdit extends JFrame {
 
     public void addIngredient(Ingredient add) {
         conn.addIngredientToStorage(getLoggedIn().getStorageId(), add);
+        getLoggedIn().setStorage(conn.getAllStorageIngredientByStorageId(getLoggedIn().getStorageId()));
         updateList(conn.getAllStorageIngredientByStorageId(getLoggedIn().getStorageId()));
     }
 
@@ -110,7 +111,7 @@ public class StorageEdit extends JFrame {
 
         if (ings != null && !ings.isEmpty()) {
             for (Ingredient iter : ings) {
-                model.addRow(new Object[]{iter.getId(), iter.getName(), iter.getMeasure(), iter.getUnit() });
+                model.addRow(new Object[]{iter.getId(), iter.getName(), iter.getFancyMeasure(), iter.getUnit() });
             }
         } else {model.addRow(new Object[] {"-1", "Nincs találat", "", "", ""});}
         table1.setModel(model);

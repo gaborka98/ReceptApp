@@ -58,9 +58,8 @@ public class MysqlConnector {
             PreparedStatement prep = conn.prepareStatement("SELECT * FROM users WHERE username = ?");
             prep.setString(1, username);
             ResultSet rs = prep.executeQuery();
-            while (rs.next()) {
-                User loggedIn = new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
-                return loggedIn;
+            if (rs.next()) {
+                return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
             }
             prep.close();
         } catch (SQLException e) {
@@ -74,7 +73,7 @@ public class MysqlConnector {
             PreparedStatement prep = conn.prepareStatement("SELECT * FROM users WHERE email = ?");
             prep.setString(1, email);
             ResultSet rs = prep.executeQuery();
-            while (rs.next()) {
+            if (rs.next()) {
                 return new User(rs.getInt("user_id"), rs.getString("username"), rs.getString("hash"), rs.getString("email"), rs.getBoolean("moderator"), rs.getInt("storage_id"));
             }
             prep.close();
@@ -263,8 +262,7 @@ public class MysqlConnector {
                     toAdd.put("tojas", rs.getBoolean("tojas"));
                     toAdd.put("cukor", rs.getBoolean("cukor"));
                 }
-
-                toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), toAdd));
+                toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), toAdd, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
             }
             prep.close();
         } catch (SQLException e) {
@@ -309,7 +307,7 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> tempAllergies = getAllergiesByRecipeId(id);
                 if (tempAllergies.isEmpty()) {tempAllergies = null;}
-                recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), tempAllergies);
+                recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), tempAllergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -345,7 +343,7 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
                 if (allergies.isEmpty()) { allergies = null; }
-                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies));
+                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
             }
             prep.close();
         } catch (SQLException e) {
@@ -382,7 +380,7 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
                 if (allergies.isEmpty()) { allergies = null; }
-                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies));
+                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
             }
             prep.close();
         } catch (SQLException e) {
@@ -489,7 +487,27 @@ public class MysqlConnector {
             ResultSet rs = prep.executeQuery();
 
             while (rs.next()) {
-                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), rs.getInt("group"), getDefaultUnitByGroup(rs.getInt("group"))));
+                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), getDefaultUnitByGroup(rs.getInt("group")), rs.getInt("group")));
+            }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return toReturn;
+    }
+
+    public ArrayList<Ingredient> getAllRecipeIngredientByRecipeId(int id) {
+        ArrayList<Ingredient> toReturn = new ArrayList<>();
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select i.ingredient_id as ingredient_id, i.name as name, i.measure as measure, pi.`group` as 'group' from ingredients i inner join pre_ingrediets pi on i.name=pi.name  where recipe_id = ?");
+            prep.setInt(1, id);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), getDefaultUnitByGroup(rs.getInt("group")), rs.getInt("group")));
             }
 
             prep.close();
@@ -555,7 +573,7 @@ public class MysqlConnector {
         ArrayList<String> toReturn = new ArrayList<>();
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("select measure from ing_groups ig where `group` = (select `group` from pre_ingrediets pi left join ingredients i on pi.name = i.name where pi.name = ?)");
+            PreparedStatement prep = conn.prepareStatement("select measure from ing_groups ig where `group` = (select `group` from pre_ingrediets pi left join ingredients i on pi.name = i.name where pi.name = ? LIMIT 1)");
             prep.setString(1, ingredietName);
 
             ResultSet rs = prep.executeQuery();
@@ -604,8 +622,7 @@ public class MysqlConnector {
                 if (rs.next()) {
                     prep.setInt(1, rs.getInt("auto_increment"));
                 }
-            }
-            else prep.setInt(1, id);
+            } else prep.setInt(1, id);
 
             prep.setString(2, add.getName());
             prep.setDouble(3, add.getMeasure());
@@ -636,5 +653,50 @@ public class MysqlConnector {
             e.printStackTrace();
         }
         return -1;
+    }
+
+    public int getIngredientGroupByName(String name) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select `group` from pre_ingrediets where name = ?");
+            prep.setString(1, name);
+
+            ResultSet rs = prep.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("group");
+            }
+            prep.close();
+        }catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public void makeRecipe(int recipeId, int storageId) {
+        checkConnection();
+        ArrayList<Ingredient> recipe = getAllRecipeIngredientByRecipeId(recipeId);
+        ArrayList<Ingredient> storage = getAllStorageIngredientByStorageId(storageId);
+
+        for (Ingredient recipeIter : recipe) {
+            for (Ingredient storageIter : storage) {
+                if (recipeIter.getName().equals(storageIter.getName())) {
+                    double maradek = storageIter.getMeasure() - recipeIter.getMeasure();
+                    try {
+                        PreparedStatement prep = conn.prepareStatement("UPDATE ingredients set measure = ? where storage_id = ? AND name = ?");
+                        prep.setDouble(1, maradek);
+                        prep.setInt(2, storageId);
+                        prep.setString(3, recipeIter.getName());
+
+                        prep.executeUpdate();
+
+                        System.out.println(prep.toString());
+
+                        prep.close();
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
     }
 }

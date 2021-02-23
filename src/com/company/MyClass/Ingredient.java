@@ -6,7 +6,6 @@ public class Ingredient {
     private double measure;
     private String unit;
     private int group;
-    private int multipli;
 
     public int getGroup() {
         return group;
@@ -14,14 +13,6 @@ public class Ingredient {
 
     public void setGroup(int group) {
         this.group = group;
-    }
-
-    public int getMultipli() {
-        return multipli;
-    }
-
-    public void setMultipli(int multipli) {
-        this.multipli = multipli;
     }
 
     public String getName() {
@@ -56,28 +47,46 @@ public class Ingredient {
         this.id = id;
     }
 
-    public Ingredient(int id, String name, double measure, int group, String unit) {
+    public Ingredient(int id, String name, double measure, String unit, int group) {
         this.id = id;
         this.name = name;
         this.measure = measure;
         this.unit = generateMeasure(group, unit);
+        this.group = group;
     }
 
-    public Ingredient(String name, double measure, String unit) {
+    public Ingredient(String name, double measure, String unit, int group) {
         this.name = name;
         this.measure = measure;
         this.unit = unit;
+        this.group = group;
+    }
+
+    public double getFancyMeasure() {
+        if (getGroup() == 1) {
+            if (getMeasure() >= 1000) { return (getMeasure() / 1000.0);}
+            else if (getMeasure() >= 10) { return (getMeasure() / 10.0);}
+            else return getMeasure();
+        }
+        else if (getGroup() == 2) {
+            if (getMeasure() >= 1000) { return (getMeasure() / 1000.0); }
+            else if (getMeasure() >= 10) { return (getMeasure() / 10.0); }
+            else return getMeasure();
+        }
+        else {
+            return getMeasure();
+        }
     }
 
     private String generateMeasure(int group, String unit) {
         if (group == 1) {
-            if (measure >= 1000) { measure /= 1000; return "kg"; }
-            else if (measure >= 10) { measure /= 10; return "dkg"; }
+            if (measure >= 1000) { return "kg"; }
+            else if (measure >= 10) { return "dkg"; }
             else return "g";
         }
         else if (group == 2) {
-            if (measure >= 1000) { measure /= 1000; return "l"; }
-            else if (measure >= 10) { measure /= 10; return "dl"; }
+            if (measure >= 1000) { return "l"; }
+            else if (measure >= 10) { return "dl"; }
             else return "ml";
         }
         else return unit;

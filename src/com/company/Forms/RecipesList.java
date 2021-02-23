@@ -33,6 +33,7 @@ public class RecipesList extends JFrame {
 
     public User getLoggedIn() { return parent.getLoggedIn(); }
 
+
     public RecipesList(MainMenu parent) {
         this.parent = parent;
         this.addWindowListener(new WindowAdapter() {

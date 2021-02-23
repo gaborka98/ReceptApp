@@ -12,13 +12,30 @@ public class Recipe {
     private ArrayList<Ingredient> ingredients;
     private HashMap<String, Boolean> allergies;
 
-    public Recipe(int id, String name, String description, String category, int difficulty, HashMap<String, Boolean> allergies) {
+    public ArrayList<Ingredient> getIngredients() {
+        return ingredients;
+    }
+
+    public void setIngredients(ArrayList<Ingredient> ingredients) {
+        this.ingredients = ingredients;
+    }
+
+    public Recipe(int id, String name, String description, String category, int difficulty, HashMap<String, Boolean> allergies, ArrayList<Ingredient> ingredients) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.category = category;
         this.difficulty = difficulty;
         this.allergies = allergies;
+        this.ingredients = ingredients.isEmpty() ? null : ingredients;
+    }
+
+    public HashMap<String, Double> getRawIngredients() {
+        HashMap<String, Double> toReturn = new HashMap<>();
+        for (Ingredient iter : ingredients) {
+            toReturn.put(iter.getName(), iter.getMeasure());
+        }
+        return toReturn;
     }
 
     public int getDifficulty() {
