@@ -9,6 +9,7 @@ public class Recipe {
     private String description;
     private String category;
     private int difficulty;
+    private int allergies_id;
     private ArrayList<Ingredient> ingredients;
     private HashMap<String, Boolean> allergies;
 
@@ -20,22 +21,41 @@ public class Recipe {
         this.ingredients = ingredients;
     }
 
-    public Recipe(int id, String name, String description, String category, int difficulty, HashMap<String, Boolean> allergies, ArrayList<Ingredient> ingredients) {
+    public Recipe(int id, String name, String description, String category, int difficulty,int allergies_id, HashMap<String, Boolean> allergies, ArrayList<Ingredient> ingredients) {
         this.id = id;
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.difficulty = difficulty;
+        this.allergies_id = allergies_id;
+        this.allergies = allergies;
+        this.ingredients = ingredients.isEmpty() ? null : ingredients;
+    }
+
+    public int getAllergies_id() {
+        return allergies_id;
+    }
+
+    public void setAllergies_id(int allergies_id) {
+        this.allergies_id = allergies_id;
+    }
+
+    public Recipe(String name, String description, String category, int difficulty, int allergies_id, HashMap<String, Boolean> allergies, ArrayList<Ingredient> ingredients) {
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.difficulty = difficulty;
+        this.allergies_id = allergies_id;
+        this.allergies = allergies;
+        this.ingredients = ingredients.isEmpty() ? null : ingredients;
+    }
+    public Recipe(String name, String description, String category, int difficulty, HashMap<String, Boolean> allergies, ArrayList<Ingredient> ingredients) {
         this.name = name;
         this.description = description;
         this.category = category;
         this.difficulty = difficulty;
         this.allergies = allergies;
         this.ingredients = ingredients.isEmpty() ? null : ingredients;
-    }
-
-    public HashMap<String, Double> getRawIngredients() {
-        HashMap<String, Double> toReturn = new HashMap<>();
-        for (Ingredient iter : ingredients) {
-            toReturn.put(iter.getName(), iter.getMeasure());
-        }
-        return toReturn;
     }
 
     public int getDifficulty() {

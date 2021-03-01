@@ -53,7 +53,7 @@ public class DetailView extends JFrame {
         setPreferredSize(dim);
         setMinimumSize(dim);
         setLocationRelativeTo(null);
-        setTitle("Recep részletei");
+        setTitle("Recept részletei");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
 

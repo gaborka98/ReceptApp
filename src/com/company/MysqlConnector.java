@@ -8,6 +8,7 @@ import com.mysql.cj.QueryResult;
 import com.mysql.cj.protocol.Resultset;
 import com.mysql.cj.x.protobuf.MysqlxPrepare;
 
+import javax.swing.plaf.nimbus.State;
 import javax.xml.transform.Result;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -262,7 +263,7 @@ public class MysqlConnector {
                     toAdd.put("tojas", rs.getBoolean("tojas"));
                     toAdd.put("cukor", rs.getBoolean("cukor"));
                 }
-                toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), toAdd, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
+                toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), toAdd, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
             }
             prep.close();
         } catch (SQLException e) {
@@ -270,6 +271,75 @@ public class MysqlConnector {
         }
 
         return toReturn;
+    }
+
+    public boolean insertRecipe(Recipe recipe) {
+        checkConnection();
+        int catecory_id = getCategoryIdByName(recipe.getCategory());
+        int allergies_id = insertAllergies(recipe.getAllergies());
+        try {
+            PreparedStatement prep = conn.prepareStatement("insert into recipes(name, description, category_id, difficulty, allergies_id) values (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            prep.setString(1,recipe.getName());
+            prep.setString(2,recipe.getDescription());
+            prep.setInt(3,catecory_id);
+            prep.setInt(4,recipe.getDifficulty());
+            prep.setInt(5,allergies_id);
+
+            prep.executeUpdate();
+
+            ResultSet rs = prep.getGeneratedKeys();
+            int insertedId = 0;
+            if (rs.next()) { insertedId = rs.getInt(1); }
+
+            prep.close();
+
+            if (insertedId == 0 ) {throw new SQLException("inserted row lekerese nem sikerult");}
+            for (Ingredient iter : recipe.getIngredients()) {
+                addIngredientToDatabaseByRecipeId(insertedId, iter.getName(), iter.getMeasure());
+            }
+        } catch (SQLException e) {
+            System.out.println("Recept adatbazishoz adasa kozben hiba lepett fel");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private int insertAllergies(HashMap<String, Boolean> allergies) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("insert into allergies(laktoz, gluten, hus, tojas, cukor) values (?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS);
+            prep.setBoolean(1, allergies.get("laktoz"));
+            prep.setBoolean(2, allergies.get("gluten"));
+            prep.setBoolean(3, allergies.get("hus"));
+            prep.setBoolean(4, allergies.get("tojas"));
+            prep.setBoolean(5, allergies.get("cukor"));
+
+            prep.executeUpdate();
+
+            ResultSet rs = prep.getGeneratedKeys();
+
+            if (rs.next()) { return rs.getInt(1); }
+
+            prep.close();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    private int getCategoryIdByName(String name) {
+        checkConnection();
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("select category_id from categories where name = '" + name + "'");
+            if (rs.next()) { return rs.getInt("category_id"); }
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
     public HashMap<String, Boolean> getAllergiesByRecipeId(int recipeId) {
@@ -307,7 +377,7 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> tempAllergies = getAllergiesByRecipeId(id);
                 if (tempAllergies.isEmpty()) {tempAllergies = null;}
-                recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), tempAllergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
+                recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), tempAllergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -343,7 +413,7 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
                 if (allergies.isEmpty()) { allergies = null; }
-                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
+                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
             }
             prep.close();
         } catch (SQLException e) {
@@ -380,7 +450,7 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
                 if (allergies.isEmpty()) { allergies = null; }
-                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
+                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
             }
             prep.close();
         } catch (SQLException e) {
@@ -569,12 +639,12 @@ public class MysqlConnector {
         }
     }
 
-    public ArrayList<String> getAllUnitByIngredientName(String ingredietName) {
+    public ArrayList<String> getAllUnitByIngredientName(String ingredientName) {
         ArrayList<String> toReturn = new ArrayList<>();
         checkConnection();
         try {
             PreparedStatement prep = conn.prepareStatement("select measure from ing_groups ig where `group` = (select `group` from pre_ingrediets pi left join ingredients i on pi.name = i.name where pi.name = ? LIMIT 1)");
-            prep.setString(1, ingredietName);
+            prep.setString(1, ingredientName);
 
             ResultSet rs = prep.executeQuery();
 
@@ -608,6 +678,20 @@ public class MysqlConnector {
         }
 
         return toReturn;
+    }
+
+    public void addIngredientToDatabaseByRecipeId(int recipeId, String name, Double measure) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("insert into ingredients(name, measure, recipe_id) values (?,?,?)");
+            prep.setString(1, name);
+            prep.setDouble(2, measure);
+            prep.setInt(3, recipeId);
+            prep.executeUpdate();
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public void addIngredientToStorage(int storageId, Ingredient add) {
@@ -646,7 +730,7 @@ public class MysqlConnector {
 
             ResultSet rs = prep.executeQuery();
 
-            while (rs.next()) { return rs.getInt("ingredient_id"); }
+            if (rs.next()) { return rs.getInt("ingredient_id"); }
 
             prep.close();
         } catch (SQLException e) {
@@ -698,5 +782,133 @@ public class MysqlConnector {
                 }
             }
         }
+    }
+
+    public void addIngredientToDatabase(String ingName, int ingGroup) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("INSERT INTO pre_ingrediets(name, `group`) values(? ,?)");
+            prep.setString(1,ingName);
+            prep.setInt(2,ingGroup);
+
+            prep.executeUpdate();
+
+            prep.close();
+        } catch (SQLException e) {
+            System.out.println("Hiba a hozzavalo hozzaadasaban (addIngredientToDatabase)");
+            e.printStackTrace();
+        }
+    }
+
+    public boolean addCategory(String newCategory) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("insert into categories(name) values (?)");
+            prep.setString(1,newCategory);
+            prep.executeUpdate();
+            prep.close();
+        } catch (SQLException e) {
+            System.out.println("Hiba a kategoria beszurasa kozben!");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private void deleteIngredientByRecipeId(int recipeId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("delete from ingredients where recipe_id=?");
+            prep.setInt(1, recipeId);
+            prep.executeUpdate();
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean deleteRecipeById(Integer recipeId, Integer allergies_id) {
+        checkConnection();
+        try {
+            deleteIngredientByRecipeId(recipeId);
+            deleteAllergiesById(allergies_id);
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate("delete from recipes where recipe_id = '" + recipeId + "'");
+            stmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    private void deleteAllergiesById(Integer allergies_id) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("delete from allergies where allergie_id = ?");
+            prep.setInt(1, allergies_id);
+            prep.executeUpdate();
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateAllergies(HashMap<String, Boolean> allergies, int allergieId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("update allergies set cukor = ?, gluten = ?, hus = ?, laktoz = ?, tojas = ? where allergie_id = ?");
+            prep.setBoolean(1, allergies.get("cukor"));
+            prep.setBoolean(2, allergies.get("gluten"));
+            prep.setBoolean(3, allergies.get("hus"));
+            prep.setBoolean(4, allergies.get("laktoz"));
+            prep.setBoolean(5, allergies.get("tojas"));
+            prep.setInt(6, allergieId);
+
+            prep.executeUpdate();
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void updateIngredients(ArrayList<Ingredient> ings, int recipeId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("delete from ingredients where recipe_id = ?");
+            prep.setInt(1,recipeId);
+            prep.executeUpdate();
+            prep.close();
+
+            for (Ingredient iter: ings) {
+                addIngredientToDatabaseByRecipeId(recipeId, iter.getName(), iter.getMeasure());
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean updateRecipeById(int id, Recipe toAdd) {
+        checkConnection();
+        try {
+            updateAllergies(toAdd.getAllergies(), toAdd.getAllergies_id());
+            updateIngredients(toAdd.getIngredients(), id);
+            PreparedStatement prep = conn.prepareStatement("update recipes set name = ?, description = ?, category_id = ?, difficulty = ? where recipe_id = ?");
+            prep.setString(1,toAdd.getName());
+            prep.setString(2, toAdd.getDescription());
+            prep.setInt(3, getCategoryIdByName(toAdd.getCategory()));
+            prep.setInt(4,toAdd.getDifficulty());
+            prep.setInt(5, id);
+
+            prep.executeUpdate();
+
+            prep.close();
+        }catch (SQLException e) {
+            System.out.println("A recept frissitese kozben hiba tortent");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
     }
 }

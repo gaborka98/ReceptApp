@@ -138,6 +138,24 @@ public class RecipesList extends JFrame {
                 updateList(conn.getAllRecipe());
             }
         });
+        insertButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                RecipeAdd add = new RecipeAdd(RecipesList.this, "insert", null);
+                add.setVisible(true);
+                RecipesList.this.setVisible(false);
+                updateList(conn.getAllRecipe());
+            }
+        });
+        editButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                RecipeAdd edit = new RecipeAdd(RecipesList.this, "edit", (Integer) list.getModel().getValueAt(list.getSelectedRow(), 0));
+                edit.setVisible(true);
+                RecipesList.this.setVisible(false);
+                updateList(conn.getAllRecipe());
+            }
+        });
     }
 
     private void updateList(ArrayList<Recipe> recipes) {
