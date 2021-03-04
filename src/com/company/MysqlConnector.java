@@ -551,13 +551,13 @@ public class MysqlConnector {
         ArrayList<Ingredient> toReturn = new ArrayList<>();
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("select i.ingredient_id as ingredient_id, i.name as name, i.measure as measure, pi.`group` as 'group' from ingredients i inner join pre_ingrediets pi on i.name=pi.name  where storage_id = ?");
+            PreparedStatement prep = conn.prepareStatement("select i.ingredient_id as ingredient_id, i.name as name, i.measure as measure, pi.`group` as 'group', i.unit as 'unit' from ingredients i inner join pre_ingrediets pi on i.name=pi.name  where storage_id = ?");
             prep.setInt(1, id);
 
             ResultSet rs = prep.executeQuery();
 
             while (rs.next()) {
-                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), getDefaultUnitByGroup(rs.getInt("group")), rs.getInt("group")));
+                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), rs.getString("unit") == null ? getDefaultUnitByGroup(rs.getInt("group")) : rs.getString("unit"), rs.getInt("group")));
             }
 
             prep.close();
@@ -571,13 +571,13 @@ public class MysqlConnector {
         ArrayList<Ingredient> toReturn = new ArrayList<>();
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("select i.ingredient_id as ingredient_id, i.name as name, i.measure as measure, pi.`group` as 'group' from ingredients i inner join pre_ingrediets pi on i.name=pi.name  where recipe_id = ?");
+            PreparedStatement prep = conn.prepareStatement("select i.ingredient_id as ingredient_id, i.name as name, i.measure as measure, pi.`group` as 'group', i.unit as 'unit' from ingredients i inner join pre_ingrediets pi on i.name=pi.name  where recipe_id = ?");
             prep.setInt(1, id);
 
             ResultSet rs = prep.executeQuery();
 
             while (rs.next()) {
-                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), getDefaultUnitByGroup(rs.getInt("group")), rs.getInt("group")));
+                toReturn.add(new Ingredient(rs.getInt("ingredient_id"), rs.getString("name"), rs.getInt("measure"), rs.getString("unit") == null ? getDefaultUnitByGroup(rs.getInt("group")) : rs.getString("unit"), rs.getInt("group")));
             }
 
             prep.close();
@@ -615,7 +615,7 @@ public class MysqlConnector {
 
             ResultSet rs = prep.executeQuery();
 
-            while (rs.next()) {
+            if (rs.next()) {
                 return rs.getString("measure");
             }
             prep.close();
@@ -697,7 +697,7 @@ public class MysqlConnector {
     public void addIngredientToStorage(int storageId, Ingredient add) {
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("insert into ingredients(ingredient_id, name, measure, storage_id) VALUES (?, ?, ?, ?) on duplicate key update measure = measure + ?;");
+            PreparedStatement prep = conn.prepareStatement("insert into ingredients(ingredient_id, name, measure, storage_id, unit) VALUES (?, ?, ?, ?, ?) on duplicate key update measure = measure + ?;");
             int id = getIngredientIdByNameAndStorageId(add.getName(), storageId);
 
             if (id == -1) {
@@ -711,7 +711,12 @@ public class MysqlConnector {
             prep.setString(2, add.getName());
             prep.setDouble(3, add.getMeasure());
             prep.setInt(4, storageId);
-            prep.setDouble(5, add.getMeasure());
+            prep.setDouble(6, add.getMeasure());
+            if (add.getGroup() == 3) {
+                prep.setString(5,add.getUnit());
+            } else {
+                prep.setNull(5, Types.NULL);
+            }
 
             prep.executeUpdate();
 
@@ -719,6 +724,30 @@ public class MysqlConnector {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public ArrayList<String[]> getLowIngredientsFromStorage(int storageId) {
+        checkConnection();
+        ArrayList<String[]> toReturn = new ArrayList<>();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select i.name, measure, unit from ingredients i inner join pre_ingrediets pi on i.name = pi.name where storage_id is not null and pi.`group` in (1,2) and measure < 500 and storage_id = ? union select i.name, measure, unit from ingredients i inner join pre_ingrediets pi on i.name = pi.name where storage_id is not null and pi.`group` in (3) and measure < 3 and storage_id = ?");
+            prep.setInt(1, storageId);
+            prep.setInt(2, storageId);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                String[] temp = new String[3];
+                temp[0] = rs.getString(1);
+                temp[1] = rs.getString(2);
+                temp[2] = rs.getString(3);
+                toReturn.add(temp);
+            }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return toReturn;
     }
 
     private int getIngredientIdByNameAndStorageId(String name, int storageId) {

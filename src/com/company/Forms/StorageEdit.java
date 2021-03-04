@@ -13,6 +13,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 public class StorageEdit extends JFrame {
@@ -57,6 +58,21 @@ public class StorageEdit extends JFrame {
         setTitle("Raktár szerkesztése");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
+
+        ArrayList<String[]> low = conn.getLowIngredientsFromStorage(getLoggedIn().getStorageId());
+        StringBuilder sb = new StringBuilder();
+        for (String[] iter : low) {
+            sb.append(" - " + iter[0] + ": " + iter[1] + " ");
+            if (iter[2] != null) {
+                sb.append(iter[2]);
+            } else {
+                sb.append(conn.getDefaultUnitByGroup(conn.getIngredientGroupByName(iter[0])));
+            }
+            sb.append("\n");
+        }
+        sb.append("Javaslom, hogy a közeljövőben ne felejtsd el felírni ezeket a bevásárló listádra!");
+
+        JOptionPane.showMessageDialog(StorageEdit.this, "A következő alapanyagokból kifogyóban vagy:\n" + sb.toString());
 
         visszaButton.addActionListener(new ActionListener() {
             @Override
@@ -115,5 +131,19 @@ public class StorageEdit extends JFrame {
             }
         } else {model.addRow(new Object[] {"-1", "Nincs találat", "", "", ""});}
         table1.setModel(model);
+    }
+
+    private String generateMeasure(int group, String unit, double measure) {
+        if (group == 1) {
+            if (measure >= 1000) { return "kg"; }
+            else if (measure >= 10) { return "dkg"; }
+            else return "g";
+        }
+        else if (group == 2) {
+            if (measure >= 1000) { return "l"; }
+            else if (measure >= 10) { return "dl"; }
+            else return "ml";
+        }
+        else return unit;
     }
 }
