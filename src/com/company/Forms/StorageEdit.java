@@ -60,19 +60,21 @@ public class StorageEdit extends JFrame {
         pack();
 
         ArrayList<String[]> low = conn.getLowIngredientsFromStorage(getLoggedIn().getStorageId());
-        StringBuilder sb = new StringBuilder();
-        for (String[] iter : low) {
-            sb.append(" - " + iter[0] + ": " + iter[1] + " ");
-            if (iter[2] != null) {
-                sb.append(iter[2]);
-            } else {
-                sb.append(conn.getDefaultUnitByGroup(conn.getIngredientGroupByName(iter[0])));
+        if (!low.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (String[] iter : low) {
+                sb.append(" - " + iter[0] + ": " + iter[1] + " ");
+                if (iter[2] != null) {
+                    sb.append(iter[2]);
+                } else {
+                    sb.append(conn.getDefaultUnitByGroup(conn.getIngredientGroupByName(iter[0])));
+                }
+                sb.append("\n");
             }
-            sb.append("\n");
-        }
-        sb.append("Javaslom, hogy a közeljövőben ne felejtsd el felírni ezeket a bevásárló listádra!");
+            sb.append("Javaslom, hogy a közeljövőben ne felejtsd el felírni ezeket a bevásárló listádra!");
 
-        JOptionPane.showMessageDialog(StorageEdit.this, "A következő alapanyagokból kifogyóban vagy:\n" + sb.toString());
+            JOptionPane.showMessageDialog(StorageEdit.this, "A következő alapanyagokból kifogyóban vagy:\n" + sb.toString());
+        }
 
         visszaButton.addActionListener(new ActionListener() {
             @Override

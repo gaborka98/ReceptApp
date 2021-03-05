@@ -48,7 +48,7 @@ public class StorageMenu extends JFrame {
             }
         });
 
-        if (loggedIn.getStorageId() == -1) {
+        if (loggedIn.getStorageId() == 0) {
             deleteButton.setEnabled(false);
             editButton.setEnabled(false);
         } else { createButton.setVisible(false); }

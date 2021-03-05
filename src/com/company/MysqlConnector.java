@@ -222,7 +222,7 @@ public class MysqlConnector {
             prep.close();
 
             Statement stmt = conn.createStatement();
-            stmt.executeUpdate("UPDATE users SET storage_id = -1 WHERE user_id = " + loggedIn.getId());
+            stmt.executeUpdate("UPDATE users SET storage_id = null WHERE user_id = " + loggedIn.getId());
 
             deleteAllIngredientsByStorageId(loggedIn.getStorageId());
         } catch (SQLException e) {
