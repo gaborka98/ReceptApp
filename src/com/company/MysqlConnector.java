@@ -4,12 +4,9 @@ import com.company.MyClass.Filter;
 import com.company.MyClass.Ingredient;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
-import com.mysql.cj.QueryResult;
-import com.mysql.cj.protocol.Resultset;
-import com.mysql.cj.x.protobuf.MysqlxPrepare;
 
-import javax.swing.plaf.nimbus.State;
 import javax.xml.transform.Result;
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
@@ -694,9 +691,10 @@ public class MysqlConnector {
         }
     }
 
-    public void addIngredientToStorage(int storageId, Ingredient add) {
+    public void addIngredientToStorage(int userId, int storageId, Ingredient add) {
         checkConnection();
         try {
+            addStatistic(2, userId, null, add.getId());
             PreparedStatement prep = conn.prepareStatement("insert into ingredients(ingredient_id, name, measure, storage_id, unit) VALUES (?, ?, ?, ?, ?) on duplicate key update measure = measure + ?;");
             int id = getIngredientIdByNameAndStorageId(add.getName(), storageId);
 
@@ -785,7 +783,7 @@ public class MysqlConnector {
         return 0;
     }
 
-    public void makeRecipe(int recipeId, int storageId) {
+    public void makeRecipe(int recipeId, int storageId, int userId) {
         checkConnection();
         ArrayList<Ingredient> recipe = getAllRecipeIngredientByRecipeId(recipeId);
         ArrayList<Ingredient> storage = getAllStorageIngredientByStorageId(storageId);
@@ -795,6 +793,7 @@ public class MysqlConnector {
                 if (recipeIter.getName().equals(storageIter.getName())) {
                     double maradek = storageIter.getMeasure() - recipeIter.getMeasure();
                     try {
+                        addStatistic(3, userId, null, recipeIter.getId()); // alapanyag levonas staisztika
                         PreparedStatement prep = conn.prepareStatement("UPDATE ingredients set measure = ? where storage_id = ? AND name = ?");
                         prep.setDouble(1, maradek);
                         prep.setInt(2, storageId);
@@ -811,6 +810,7 @@ public class MysqlConnector {
                 }
             }
         }
+        addStatistic(1, userId, recipeId, null); // recept keszites statisztika
     }
 
     public void addIngredientToDatabase(String ingName, int ingGroup) {
@@ -939,5 +939,82 @@ public class MysqlConnector {
             return false;
         }
         return true;
+    }
+
+    public void addStatistic(int type, Integer userId, Integer recipeId, Integer ingId) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("insert into statistic (statistic_type_id, user_id, recipe_id, ingredient_id) values (?, ?, ?, ?)");
+            prep.setInt(1, type);
+            prep.setInt(2, userId);
+            if (recipeId != null) {
+                prep.setInt(3, recipeId);
+            } else {
+                prep.setNull(3, Types.NULL);
+            }
+            if (ingId != null) {
+                prep.setInt(4, ingId);
+            } else {
+                prep.setNull(4, Types.NULL);
+            }
+
+            prep.executeUpdate();
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String topFiveRecipeStat(Integer userId) {
+        checkConnection();
+        StringBuilder sb = new StringBuilder();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select r.name as  'name', COUNT(r.recipe_id) as 'count' from statistic s\n" +
+                    "left join recipes r on r.recipe_id = s.recipe_id\n" +
+                    "left join users u on u.user_id = s.user_id\n" +
+                    "where statistic_type_id = 1\n" +
+                    "and s.user_id = ?\n" +
+                    " group by r.recipe_id order by count desc limit 5;");
+
+            prep.setInt(1,userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            while(rs.next()) {
+                sb.append(" - ").append(rs.getString("name")).append("\n");
+            }
+
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
+    }
+
+    public String topFiveIngredientStat(Integer userId) {
+        checkConnection();
+        StringBuilder sb = new StringBuilder();
+        try {
+            PreparedStatement prep = conn.prepareStatement("select i.name as name, COUNT(i.ingredient_id) as count from statistic s\n" +
+                    "left join users u on s.user_id = u.user_id\n" +
+                    "left join ingredients i on i.ingredient_id = s.ingredient_id\n" +
+                    "where statistic_type_id = 3 \n" +
+                    "and u.user_id = ?\n" +
+                    "group by i.ingredient_id limit 5;");
+            prep.setInt(1, userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            while (rs.next()) {
+                sb.append(" - ").append(rs.getString("name")).append("\n");
+            }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 }

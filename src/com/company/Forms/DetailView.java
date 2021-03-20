@@ -108,8 +108,9 @@ public class DetailView extends JFrame {
             int result = JOptionPane.showOptionDialog(this, "Biztos elkészíted a(z) " + recipeTitle.getText() + " nevű receptet?", "Recept elkészítése", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
             if (result == JOptionPane.YES_OPTION) {
-                conn.makeRecipe(this.recipe.getId(), getLoggedIn().getStorageId());
+                conn.makeRecipe(this.recipe.getId(), getLoggedIn().getStorageId(), getLoggedIn().getId());
                 getLoggedIn().setStorage(conn.getAllStorageIngredientByStorageId(getLoggedIn().getStorageId()));
+                JOptionPane.showMessageDialog(this, "A recept elkeszítése sikeresen megtörtént, az alapanyagokat levontuk a raktárkészletből");
             }
         }
     }

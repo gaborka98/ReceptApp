@@ -74,6 +74,14 @@ public class MainMenu extends JFrame{
 
             }
         });
+        statisticButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                StatisticForm statisticForm = new StatisticForm(MainMenu.this);
+                statisticForm.setVisible(true);
+                MainMenu.this.setVisible(false);
+            }
+        });
     }
 
     private void storageProcess() {

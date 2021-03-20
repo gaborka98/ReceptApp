@@ -118,7 +118,7 @@ public class StorageEdit extends JFrame {
     }
 
     public void addIngredient(Ingredient add) {
-        conn.addIngredientToStorage(getLoggedIn().getStorageId(), add);
+        conn.addIngredientToStorage(getLoggedIn().getId(), getLoggedIn().getStorageId(), add);
         getLoggedIn().setStorage(conn.getAllStorageIngredientByStorageId(getLoggedIn().getStorageId()));
         updateList(conn.getAllStorageIngredientByStorageId(getLoggedIn().getStorageId()));
     }
