@@ -19,7 +19,7 @@ public class MysqlConnector {
     private static MysqlConnector instance = null;
     private Connection conn ;
 
-    private static final String host = "jdbc:mysql://192.168.1.56:3306/ReceptApp";
+    private static final String host = "jdbc:mysql://192.168.2.55:3306/ReceptApp";
 
     public static MysqlConnector getInstance() {
         if (instance == null){
@@ -694,7 +694,6 @@ public class MysqlConnector {
     public void addIngredientToStorage(int userId, int storageId, Ingredient add) {
         checkConnection();
         try {
-            addStatistic(2, userId, null, add.getId());
             PreparedStatement prep = conn.prepareStatement("insert into ingredients(ingredient_id, name, measure, storage_id, unit) VALUES (?, ?, ?, ?, ?) on duplicate key update measure = measure + ?;");
             int id = getIngredientIdByNameAndStorageId(add.getName(), storageId);
 
@@ -704,7 +703,15 @@ public class MysqlConnector {
                 if (rs.next()) {
                     prep.setInt(1, rs.getInt("auto_increment"));
                 }
-            } else prep.setInt(1, id);
+            } else {
+                prep.setInt(1, id);
+
+                if (add.getMeasure() >= 0) {
+                    addStatistic(2, userId, null, id);
+                } else {
+                    addStatistic(3, userId, null, id);
+                }
+            }
 
             prep.setString(2, add.getName());
             prep.setDouble(3, add.getMeasure());
@@ -1016,5 +1023,132 @@ public class MysqlConnector {
         }
 
         return sb.toString();
+    }
+
+    public String topRecipeActualMonth(Integer userId) {
+        checkConnection();
+        String res = "";
+        try {
+            PreparedStatement prep = conn.prepareStatement("select r.name as name, count(r.recipe_id) as count\n" +
+                    "from statistic s\n" +
+                    "left join users u on s.user_id = u.user_id\n" +
+                    "left join recipes r on s.recipe_id = r.recipe_id\n" +
+                    "where u.user_id = ? \n" +
+                    "and MONTH(s.date) = MONTH(current_date())\n" +
+                    "and s.recipe_id is not null\n" +
+                    "and s.statistic_type_id = 1\n" +
+                    "group by r.recipe_id\n" +
+                    "order by count desc\n" +
+                    "limit 1;");
+
+            prep.setInt(1,userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { return rs.getString("name"); }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    public String topMonthRecipe(Integer userId) {
+        checkConnection();
+        String res = "";
+        try {
+            PreparedStatement prep = conn.prepareStatement("select count(*) as darab, monthname(date) as name from statistic\n" +
+                    "where user_id = ?\n" +
+                    "and statistic_type_id = 1\n" +
+                    "and recipe_id is not null\n" +
+                    "group by month(date)\n" +
+                    "order by darab desc\n" +
+                    "limit 1;");
+
+            prep.setInt(1, userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { res = rs.getString("name"); }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    public String topMonthIng(Integer userId) {
+        checkConnection();
+        String res = "";
+        try {
+            PreparedStatement prep = conn.prepareStatement("select count(*) as darab, monthname(date) as name from statistic\n" +
+                    "where user_id = ?\n" +
+                    "and ingredient_id is not null\n" +
+                    "and statistic_type_id = 2\n" +
+                    "group by month(date)\n" +
+                    "order by darab desc\n" +
+                    "limit 1;");
+
+            prep.setInt(1, userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { res = rs.getString("name"); }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+
+    public String topIngActMonth(Integer userId) {
+        checkConnection();
+        String res = "";
+        try {
+            PreparedStatement prep = conn.prepareStatement("select i.name as name, count(s.ingredient_id) as count\n" +
+                    "from statistic s\n" +
+                    "left join ingredients i on s.ingredient_id = i.ingredient_id\n" +
+                    "left join users u on s.user_id = u.user_id\n" +
+                    "where s.ingredient_id is not null\n" +
+                    "and s.statistic_type_id = 2\n" +
+                    "and s.user_id = ?\n" +
+                    "group by s.ingredient_id\n" +
+                    "order by count desc\n" +
+                    "limit 1;");
+            prep.setInt(1, userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { res = rs.getString("name"); }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
+    }
+    public String topIngActMonthUse(Integer userId) {
+        checkConnection();
+        String res = "";
+        try {
+            PreparedStatement prep = conn.prepareStatement("select i.name as name, count(s.ingredient_id) as count\n" +
+                    "from statistic s\n" +
+                    "left join ingredients i on s.ingredient_id = i.ingredient_id\n" +
+                    "left join users u on s.user_id = u.user_id\n" +
+                    "where s.ingredient_id is not null\n" +
+                    "and s.statistic_type_id = 3\n" +
+                    "and s.user_id = ?\n" +
+                    "group by s.ingredient_id\n" +
+                    "order by count desc\n" +
+                    "limit 1;");
+            prep.setInt(1, userId);
+
+            ResultSet rs = prep.executeQuery();
+
+            if (rs.next()) { res = rs.getString("name"); }
+            prep.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return res;
     }
 }

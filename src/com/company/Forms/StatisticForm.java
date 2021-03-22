@@ -4,8 +4,11 @@ import com.company.MyClass.User;
 import com.company.MysqlConnector;
 
 import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.HashMap;
 
 public class StatisticForm extends JFrame{
     private JPanel panel1;
@@ -16,8 +19,9 @@ public class StatisticForm extends JFrame{
     private JLabel topMonth;
     private JLabel topIngMonth;
     private JLabel topIngThisMonth;
-    private JLabel topBuyThisMonth;
     private JLabel topUseThisMonth;
+    private JButton visszaButtonBottom;
+    private JButton visszaButtonTop;
 
     private MainMenu parent;
 
@@ -26,6 +30,21 @@ public class StatisticForm extends JFrame{
     public User getLoggedIn() {
         return parent.getLoggedIn();
     }
+
+    private static final HashMap<String, String> monthsNames = new HashMap<String,String>() {{
+        put("January", "Január");
+        put("February", "Február");
+        put("March", "Március");
+        put("April", "Április");
+        put("May", "Május");
+        put("June", "Június");
+        put("July", "Július");
+        put("August", "Augusztus");
+        put("September", "Szeptember");
+        put("October", "Október");
+        put("November", "November");
+        put("December", "December");
+    }};
 
     public StatisticForm(MainMenu parent) {
         this.parent = parent;
@@ -43,7 +62,27 @@ public class StatisticForm extends JFrame{
             }
         });
 
-        topFiveRecipe.setText(conn.topFiveRecipeStat(getLoggedIn().getId()));
-        topFiveIngredient.setText(conn.topFiveIngredientStat(getLoggedIn().getId()));
+        ActionListener listener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                StatisticForm.this.dispose();
+                parent.setVisible(true);
+            }
+        };
+
+        try {
+            topFiveRecipe.setText(conn.topFiveRecipeStat(getLoggedIn().getId()));
+            topFiveIngredient.setText(conn.topFiveIngredientStat(getLoggedIn().getId()));
+            topRecipe.setText(conn.topRecipeActualMonth(getLoggedIn().getId()));
+            topMonth.setText(monthsNames.get(conn.topMonthRecipe(getLoggedIn().getId())));
+            topIngMonth.setText(monthsNames.get(conn.topMonthIng(getLoggedIn().getId())));
+            topIngThisMonth.setText(conn.topIngActMonth(getLoggedIn().getId()));
+            topUseThisMonth.setText(conn.topIngActMonthUse(getLoggedIn().getId()));
+        } catch (NullPointerException e) {
+            JOptionPane.showMessageDialog(StatisticForm.this, "A statisztikák lekérése során valamelyik adat nem letölthető!");
+        }
+
+        visszaButtonBottom.addActionListener(listener);
+        visszaButtonTop.addActionListener(listener);
     }
 }
