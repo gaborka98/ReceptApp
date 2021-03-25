@@ -51,7 +51,7 @@ public class Ingredient {
         this.id = id;
         this.name = name;
         this.measure = measure;
-        this.unit = generateMeasure(group, unit);
+        this.unit = unit;
         this.group = group;
     }
 
@@ -76,19 +76,5 @@ public class Ingredient {
         else {
             return getMeasure();
         }
-    }
-
-    private String generateMeasure(int group, String unit) {
-        if (group == 1) {
-            if (measure >= 1000) { return "kg"; }
-            else if (measure >= 10) { return "dkg"; }
-            else return "g";
-        }
-        else if (group == 2) {
-            if (measure >= 1000) { return "l"; }
-            else if (measure >= 10) { return "dl"; }
-            else return "ml";
-        }
-        else return unit;
     }
 }

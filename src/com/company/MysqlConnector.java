@@ -292,7 +292,7 @@ public class MysqlConnector {
 
             if (insertedId == 0 ) {throw new SQLException("inserted row lekerese nem sikerult");}
             for (Ingredient iter : recipe.getIngredients()) {
-                addIngredientToDatabaseByRecipeId(insertedId, iter.getName(), iter.getMeasure());
+                addIngredientToDatabaseByRecipeId(insertedId, iter.getName(), iter.getMeasure(), iter.getUnit());
             }
         } catch (SQLException e) {
             System.out.println("Recept adatbazishoz adasa kozben hiba lepett fel");
@@ -677,13 +677,14 @@ public class MysqlConnector {
         return toReturn;
     }
 
-    public void addIngredientToDatabaseByRecipeId(int recipeId, String name, Double measure) {
+    public void addIngredientToDatabaseByRecipeId(int recipeId, String name, Double measure, String unit) {
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("insert into ingredients(name, measure, recipe_id) values (?,?,?)");
+            PreparedStatement prep = conn.prepareStatement("insert into ingredients(name, measure, recipe_id, unit) values (?,?,?,?)");
             prep.setString(1, name);
             prep.setDouble(2, measure);
             prep.setInt(3, recipeId);
+            prep.setString(4, unit);
             prep.executeUpdate();
             prep.close();
         } catch (SQLException e) {
@@ -918,7 +919,7 @@ public class MysqlConnector {
             prep.close();
 
             for (Ingredient iter: ings) {
-                addIngredientToDatabaseByRecipeId(recipeId, iter.getName(), iter.getMeasure());
+                addIngredientToDatabaseByRecipeId(recipeId, iter.getName(), iter.getMeasure(), iter.getUnit());
             }
         } catch (SQLException e) {
             e.printStackTrace();
