@@ -19,7 +19,7 @@ public class MysqlConnector {
     private static MysqlConnector instance = null;
     private Connection conn ;
 
-    private static final String host = "jdbc:mysql://192.168.2.55:3306/ReceptApp";
+    private static final String host = "jdbc:mysql://192.168.2.55:3306/ReceptApp?serverTimezone=Europe/Budapest";
 
     public static MysqlConnector getInstance() {
         if (instance == null){

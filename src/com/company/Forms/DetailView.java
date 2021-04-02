@@ -6,6 +6,7 @@ import com.company.MyClass.User;
 import com.company.MysqlConnector;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumnModel;
 import java.awt.*;
@@ -136,13 +137,30 @@ public class DetailView extends JFrame {
                     }
                     different = "-" + recIter.getFancyMeasure() + recIter.getUnit();
                     userStorage = " - ";
-
                 }
                 if (!alreadyhas) {
                     model.addRow(new Object[]{recIter.getId(), recIter.getName(), recIter.getFancyMeasure() + " " + recIter.getUnit(), userStorage, different});
                 }
             }
         } else {model.addRow(new Object[] {"-1", "Nincs találat", "", ""});}
+
+        ingTable.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                final Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                String diff = (String) table.getModel().getValueAt(row, 4);
+
+                if (diff != null && !diff.contains("-")) {
+                    c.setBackground(Color.GREEN);
+                } else {
+                    c.setBackground(Color.RED);
+                }
+                c.setForeground(Color.BLACK);
+
+                return c;
+            }
+        });
+
         ingTable.setModel(model);
     }
 
