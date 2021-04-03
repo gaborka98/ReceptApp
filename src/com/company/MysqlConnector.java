@@ -5,7 +5,10 @@ import com.company.MyClass.Ingredient;
 import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 
+import javax.imageio.ImageIO;
 import javax.xml.transform.Result;
+import java.awt.image.BufferedImage;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -260,7 +263,17 @@ public class MysqlConnector {
                     toAdd.put("tojas", rs.getBoolean("tojas"));
                     toAdd.put("cukor", rs.getBoolean("cukor"));
                 }
-                toReturn.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), toAdd, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
+                BufferedImage i = null;
+                try {
+                    i = ImageIO.read(rs.getBlob("img").getBinaryStream());
+                } catch (IOException | NullPointerException e) {
+                    e.printStackTrace();
+                }
+
+
+                Recipe temp = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), toAdd, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
+                temp.setImg(i);
+                toReturn.add(temp);
             }
             prep.close();
         } catch (SQLException e) {
@@ -374,8 +387,17 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> tempAllergies = getAllergiesByRecipeId(id);
                 if (tempAllergies.isEmpty()) {tempAllergies = null;}
-                recipeToReturn = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), tempAllergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
+                BufferedImage i = null;
+                try {
+                    i = ImageIO.read(rs.getBlob("img").getBinaryStream());
+                } catch (IOException | NullPointerException e) {
+                    e.printStackTrace();
+                }
+                Recipe temp = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), tempAllergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
+                temp.setImg(i);
+                recipeToReturn = temp;
             }
+            prep.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -410,7 +432,15 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
                 if (allergies.isEmpty()) { allergies = null; }
-                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
+                BufferedImage i = null;
+                try {
+                    i = ImageIO.read(rs.getBlob("img").getBinaryStream());
+                } catch (IOException | NullPointerException e) {
+                    e.printStackTrace();
+                }
+                Recipe temp = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
+                temp.setImg(i);
+                recipes.add(temp);
             }
             prep.close();
         } catch (SQLException e) {
@@ -447,7 +477,15 @@ public class MysqlConnector {
             while (rs.next()) {
                 HashMap<String, Boolean> allergies = getAllergiesByRecipeId(rs.getInt("recipe_id"));
                 if (allergies.isEmpty()) { allergies = null; }
-                recipes.add(new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id"))));
+                BufferedImage i = null;
+                try {
+                    i = ImageIO.read(rs.getBlob("img").getBinaryStream());
+                } catch (IOException | NullPointerException e) {
+                    e.printStackTrace();
+                }
+                Recipe temp = new Recipe(rs.getInt("recipe_id"), rs.getString("name"), rs.getString("description"), rs.getString("category"), rs.getInt("difficulty"), rs.getInt("allergies_id"), allergies, getAllRecipeIngredientByRecipeId(rs.getInt("recipe_id")));
+                temp.setImg(i);
+                recipes.add(temp);
             }
             prep.close();
         } catch (SQLException e) {
@@ -1151,5 +1189,41 @@ public class MysqlConnector {
             e.printStackTrace();
         }
         return res;
+    }
+
+    public boolean addImage(File file, Integer recipeId) {
+        checkConnection();
+        try{
+            PreparedStatement prep = conn.prepareStatement("insert into images (filename, data, recipe_id) values (?,?,?)");
+            prep.setString(1,file.getName());
+            FileInputStream fis = new FileInputStream(file);
+            prep.setBinaryStream(2, fis, file.length());
+            prep.setInt(3, recipeId);
+
+            prep.executeUpdate();
+
+            prep.close();
+            return true;
+        } catch (SQLException | FileNotFoundException e){
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean deleteImage(int id) {
+        checkConnection();
+        try {
+            PreparedStatement prep = conn.prepareStatement("delete from images where recipe_id = ?");
+            prep.setInt(1, id);
+
+            prep.executeUpdate();
+
+            prep.close();
+
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 }

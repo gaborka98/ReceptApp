@@ -1,5 +1,6 @@
 package com.company.MyClass;
 
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -12,6 +13,15 @@ public class Recipe {
     private int allergies_id;
     private ArrayList<Ingredient> ingredients;
     private HashMap<String, Boolean> allergies;
+    private BufferedImage img;
+
+    public BufferedImage getImg() {
+        return img;
+    }
+
+    public void setImg(BufferedImage img) {
+        this.img = img;
+    }
 
     public ArrayList<Ingredient> getIngredients() {
         return ingredients;

@@ -5,6 +5,7 @@ import com.company.MyClass.Recipe;
 import com.company.MyClass.User;
 import com.company.MysqlConnector;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
@@ -14,6 +15,9 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -25,6 +29,7 @@ public class DetailView extends JFrame {
     private JLabel recipeTitle;
     private JPanel panel;
     private JTable ingTable;
+    private JPanel imgPanel;
 
     private Recipe recipe;
     private RecipesList parent;
@@ -38,6 +43,8 @@ public class DetailView extends JFrame {
         this.recipe = recipe;
         this.parent = parent;
 
+        descriptionText.setEditable(false);
+
         ingTable.setModel(new DefaultTableModel(columns,0){
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -48,7 +55,7 @@ public class DetailView extends JFrame {
         tcm.removeColumn(tcm.getColumn(0));
         updateList();
 
-        Dimension dim = new Dimension(400,600);
+        Dimension dim = new Dimension(500,700);
 
         setContentPane(panel);
         setPreferredSize(dim);
@@ -73,6 +80,12 @@ public class DetailView extends JFrame {
 
         recipeTitle.setText(recipe.getName());
         descriptionText.setText(recipe.getDescription());
+
+        if (recipe.getImg() != null) {
+            imgPanel.add(new JLabel(new ImageIcon(recipe.getImg().getScaledInstance(380, 214, Image.SCALE_SMOOTH))));
+        } else {
+            imgPanel.setVisible(false);
+        }
 
         visszaButton.addActionListener(new ActionListener() {
             @Override

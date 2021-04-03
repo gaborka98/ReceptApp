@@ -227,6 +227,22 @@
           <text value="Törlés"/>
         </properties>
       </component>
+      <component id="a69dd" class="javax.swing.JButton" binding="imgUploadBtn">
+        <constraints>
+          <grid row="11" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Kép feltöltése"/>
+        </properties>
+      </component>
+      <component id="ce7f5" class="javax.swing.JButton" binding="imgDeleteBtn">
+        <constraints>
+          <grid row="11" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+        </constraints>
+        <properties>
+          <text value="Kép törlése"/>
+        </properties>
+      </component>
     </children>
   </grid>
 </form>
