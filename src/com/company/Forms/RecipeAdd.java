@@ -12,6 +12,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.event.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -35,6 +36,8 @@ public class RecipeAdd extends JFrame {
     private JComboBox<String> categoryCombo;
     private JButton newCategoryButton;
     private JButton deleteButton;
+    private JButton imgUploadBtn;
+    private JButton imgDeleteBtn;
     private final JComboBox<String> ingCombo = new JComboBox<>();
     private final JComboBox<String> unitCombo = new JComboBox<>();
 
@@ -81,6 +84,9 @@ public class RecipeAdd extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
+
+        imgDeleteBtn.setVisible((selectedRecipe.getImg() != null));
+        imgUploadBtn.setVisible((selectedRecipe.getImg() == null));
 
         ingTable.getModel().addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
@@ -174,6 +180,31 @@ public class RecipeAdd extends JFrame {
                 if (conn.deleteRecipeById(recipeId, selectedRecipe.getAllergies_id())) {
                     JOptionPane.showMessageDialog(RecipeAdd.this, "Sikeresen törölted a(z) " + selectedRecipe.getName() + " nevű receptet!");
                     RecipeAdd.this.dispose();
+                }
+            }
+        });
+        imgUploadBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fc = new JFileChooser();
+                fc.showOpenDialog(RecipeAdd.this);
+                File file = fc.getSelectedFile();
+                if (conn.addImage(file, selectedRecipe.getId())) {
+                    JOptionPane.showMessageDialog(RecipeAdd.this, "Kép feltöltése sikeresen megtörtént");
+                    imgDeleteBtn.setVisible(true);
+                    imgUploadBtn.setVisible(false);
+                } else {
+                    JOptionPane.showMessageDialog(RecipeAdd.this, "A kép feltöltése sikertelen");
+                }
+            }
+        });
+        imgDeleteBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (conn.deleteImage(selectedRecipe.getId())) {
+                    JOptionPane.showMessageDialog(RecipeAdd.this, "A kép törlése sikeresen megtörtént");
+                    imgDeleteBtn.setVisible(false);
+                    imgUploadBtn.setVisible(true);
                 }
             }
         });
