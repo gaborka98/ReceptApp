@@ -69,7 +69,7 @@
           <text value="új létrehozása"/>
         </properties>
       </component>
-      <component id="edc31" class="javax.swing.JButton" binding="kedvencekhezAdásEltávolításButton" default-binding="true">
+      <component id="edc31" class="javax.swing.JButton" binding="favoriteAddRemove">
         <constraints>
           <grid row="2" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
         </constraints>

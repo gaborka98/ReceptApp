@@ -94,6 +94,12 @@ public class DetailView extends JFrame {
         ArrayList<Ingredient> storage = getLoggedIn().getStorage();
         ArrayList<Ingredient> recipe = this.recipe.getIngredients();
 
+        for (int i = 0; i < ingTable.getRowCount(); i++) {
+            if (ingTable.getModel().getValueAt(i,4).toString().contains("-")) {
+                makeable = false;
+            }
+        }
+
         for (Ingredient recipeIter : recipe) {
             for (Ingredient storageIter : storage) {
                 if (recipeIter.getName().equals(storageIter.getName())) {
@@ -113,6 +119,8 @@ public class DetailView extends JFrame {
                 getLoggedIn().setStorage(conn.getAllStorageIngredientByStorageId(getLoggedIn().getStorageId()));
                 JOptionPane.showMessageDialog(this, "A recept elkeszítése sikeresen megtörtént, az alapanyagokat levontuk a raktárkészletből");
             }
+        } else {
+            JOptionPane.showMessageDialog(DetailView.this, "A recept elkészítése nem lehetséges, hiányzó alapanyagok miatt!");
         }
     }
 

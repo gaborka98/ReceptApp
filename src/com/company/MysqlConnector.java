@@ -640,7 +640,7 @@ public class MysqlConnector {
         ArrayList<String> toReturn = new ArrayList<>();
         checkConnection();
         try {
-            PreparedStatement prep = conn.prepareStatement("select measure from ing_groups ig where `group` = (select `group` from pre_ingrediets pi left join ingredients i on pi.name = i.name where pi.name = ? LIMIT 1)");
+            PreparedStatement prep = conn.prepareStatement("select measure from ing_groups ig where `group` = (select `group` from pre_ingrediets pi left join ingredients i on pi.name = i.name where pi.name = ? limit 1)");
             prep.setString(1, ingredientName);
 
             ResultSet rs = prep.executeQuery();

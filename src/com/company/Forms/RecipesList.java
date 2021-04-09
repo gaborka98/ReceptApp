@@ -11,7 +11,6 @@ import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
-import java.util.Collection;
 
 public class RecipesList extends JFrame {
     private JPanel panel1;
@@ -22,7 +21,7 @@ public class RecipesList extends JFrame {
     private JButton updateButton;
     private JButton editButton;
     private JButton insertButton;
-    private JButton kedvencekhezAdásEltávolításButton;
+    private JButton favoriteAddRemove;
 
     private final MainMenu parent;
     private Filter filter;
@@ -118,7 +117,7 @@ public class RecipesList extends JFrame {
                 });
             }
         });
-        kedvencekhezAdásEltávolításButton.addActionListener(new ActionListener() {
+        favoriteAddRemove.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int col, row;

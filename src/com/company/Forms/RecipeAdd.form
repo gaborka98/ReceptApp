@@ -10,9 +10,10 @@
     <children>
       <scrollpane id="9beca">
         <constraints>
-          <grid row="3" column="0" row-span="1" col-span="4" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <minimum-size width="-1" height="200"/>
-            <preferred-size width="-1" height="200"/>
+          <grid row="3" column="0" row-span="1" col-span="4" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="1" use-parent-layout="false">
+            <minimum-size width="400" height="200"/>
+            <preferred-size width="400" height="200"/>
+            <maximum-size width="-1" height="200"/>
           </grid>
         </constraints>
         <properties/>
@@ -20,7 +21,10 @@
         <children>
           <component id="47486" class="javax.swing.JTextPane" binding="descField">
             <constraints/>
-            <properties/>
+            <properties>
+              <contentType value="text/plain"/>
+              <maximumSize width="200" height="200"/>
+            </properties>
           </component>
         </children>
       </scrollpane>
@@ -118,7 +122,7 @@
       </component>
       <component id="f7ca8" class="javax.swing.JCheckBox" binding="laktozCB">
         <constraints>
-          <grid row="9" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="9" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value="Laktóz"/>
@@ -144,7 +148,7 @@
       </component>
       <component id="eb999" class="javax.swing.JCheckBox" binding="tojasCheckBox">
         <constraints>
-          <grid row="10" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="1" use-parent-layout="false"/>
+          <grid row="10" column="0" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="1" use-parent-layout="false"/>
         </constraints>
         <properties>
           <text value="Tojás"/>
