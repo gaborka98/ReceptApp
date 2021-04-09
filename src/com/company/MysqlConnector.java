@@ -267,7 +267,7 @@ public class MysqlConnector {
                 try {
                     i = ImageIO.read(rs.getBlob("img").getBinaryStream());
                 } catch (IOException | NullPointerException e) {
-                    e.printStackTrace();
+                    System.out.println("NullPointerException hianyzo kep miatt");
                 }
 
 
