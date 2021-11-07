@@ -34,26 +34,6 @@ jobs:
       - run:
           name: Test
           command: mvn test
-      - persist_to_workspace:
-          root: /home/circleci/project/target/
-          paths:
-            - site
-  test-deploy:
-    docker:
-      - image: node:8.10.0
-    steps:
-      - checkout
-      - attach_workspace:
-          at: test/site
-      - run:
-          name: Install and configure dependencies
-          command: |
-            npm install -g --silent gh-pages@2.0.1
-            git config user.email "gaborka812@gmail.com"
-            git config user.name "ci-build"
-      - run:
-          name: Deploy docs to gh-pages branch
-          command: gh-pages --dist test/site/
 
 # Invoke jobs via workflows
 # See: https://circleci.com/docs/2.0/configuration-reference/#workflows
@@ -65,9 +45,3 @@ workflows:
       - test:
           requires:
             - build
-      - test-deploy:
-          requires:
-            - test
-          filters:
-            branches:
-              only: master
